@@ -1,0 +1,12 @@
+### TESTES DE REQUISICAO BACKEND USANDO A EXTENSAO "REST" DO VSCODE
+
+### POST - Criar cliente
+POST http://127.0.0.1:5000/criar_cliente
+Content-Type:  application/json
+
+{
+  "nome": "João Silva",
+  "cidade": "São Paulo",
+  "estado": "SP",
+  "pais": "Brasil"
+}
