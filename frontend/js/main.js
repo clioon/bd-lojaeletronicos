@@ -1,5 +1,5 @@
 // js/main.js
-import { buscarProdutos, buscarClientes, enviarPedido, buscarDescontos, buscarClientesFidelidade, buscarClientesPromocionais, buscarClientesPrimeiraCompra} from './api.js';
+import { buscarProdutos, buscarClientes, enviarPedido, buscarDescontos, buscarClientesFidelidade, buscarClientesPromocionais, buscarClientesPrimeiraCompra, buscarClientesInativos, buscarClientesHighTicket} from './api.js';
 import { state, cache } from './state.js';
 import { formatCurrency } from './utils.js';
 
@@ -20,13 +20,15 @@ async function init() {
 
     // 1. Busca dados do Backend
     try {
-        const [prods, clis, descs, vips, promos, novatos] = await Promise.all([
+        const [prods, clis, descs, vips, promos, novatos, inativos, highTickets] = await Promise.all([
             buscarProdutos(),
             buscarClientes(),
             buscarDescontos(),
             buscarClientesFidelidade(),
             buscarClientesPromocionais(),
-            buscarClientesPrimeiraCompra()
+            buscarClientesPrimeiraCompra(),
+            buscarClientesInativos(),
+            buscarClientesHighTicket()
         ]);
         
         // Formata os preços que vêm como string do Python (Decimal) para Float
@@ -42,12 +44,14 @@ async function init() {
         cache.listaFidelidade = vips;
         cache.listaPromocional = promos;
         cache.listaPrimeiraCompra = novatos;
+        cache.listaInativos = inativos;
+        cache.listaHighTicket = highTickets;
 
-        console.log(`Carregado: ${vips.length} VIPs, ${promos.length} Promocionais, ${novatos.length} Primeira Compra.`);
+        console.log(`Carregado: ${vips.length} VIPs, ${promos.length} Promocionais, ${novatos.length} Primeira Compra, ${inativos.length} Inativos e ${highTickets.length} High Tickets.`);
         
         // Simula login com o primeiro cliente do banco
         if (cache.clientes.length > 0) {
-            state.user = cache.clientes[0];
+            state.user = cache.clientes[35];
         }
 
         renderApp();
@@ -227,6 +231,8 @@ function abrirModalDescontos() {
     const ehFidelidade = cache.listaFidelidade.some(c => c.id_cliente === idUsuario);
     const ehPromocional = cache.listaPromocional.some(c => c.id_cliente === idUsuario);
     const ehPrimeiraCompra = cache.listaPrimeiraCompra.some(c => c.id_cliente === idUsuario);
+    const ehInativo = cache.listaInativos.some(c => c.id_cliente === idUsuario);
+    const ehHighTicket = cache.listaHighTicket.some(c => c.id_cliente === idUsuario);
 
     // 2. CONSTRÓI AS OPÇÕES DISPONÍVEIS (Hardcoded no Front)
     let opcoesDisponiveis = [];
@@ -264,6 +270,28 @@ function abrirModalDescontos() {
         });
     }
 
+    // Opção D: Comprou faz tempo
+    if (ehInativo) {
+        opcoesDisponiveis.push({
+            tipo: 'cupom',
+            titulo: 'Que bom te ver!',
+            descricao: 'Estávamos com saudades. Aqui está um presente.',
+            porcentagem: 12, // Um valor quebrado para parecer calculado
+            estilo: 'verde_agua' // Novo estilo
+        });
+    }
+
+    // Opção E: Quem comprou muito
+    if (ehHighTicket) {
+        opcoesDisponiveis.push({
+            tipo: 'parceria',
+            titulo: 'Membro Elite',
+            descricao: 'Seu ticket médio é superior à média da loja.',
+            porcentagem: 25, // Desconto agressivo para quem gasta muito
+            estilo: 'dourado' // Novo estilo
+        });
+    }
+
     // Se não tiver nenhuma opção
     if (opcoesDisponiveis.length === 0) {
         alert("Nenhum desconto disponível para o seu perfil no momento.");
@@ -275,11 +303,15 @@ function abrirModalDescontos() {
     const estilos = {
         'roxo':    { cor: '#6a1b9a', bg: '#f3e5f5', icone: '👑' },
         'laranja': { cor: '#e65100', bg: '#fff3e0', icone: '🔥' },
-        'azul':    { cor: '#1565c0', bg: '#e3f2fd', icone: '🎟️' }
+        'azul':    { cor: '#1565c0', bg: '#e3f2fd', icone: '🎟️' },
+        'verde_agua': { cor: '#00695c', bg: '#e0f2f1', icone: '👋' },
+        'dourado':    { cor: '#bf9000', bg: '#fff8e1', icone: '💎' }
     };
 
     const htmlLista = opcoesDisponiveis.map((opcao, index) => {
-        const style = estilos[opcao.estilo];
+        // Fallback para 'azul' se o estilo não existir
+        const style = estilos[opcao.estilo] || estilos['azul'];
+        
         return `
             <div class="cupom-item" data-index="${index}" 
                  style="

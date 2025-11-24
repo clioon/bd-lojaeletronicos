@@ -349,9 +349,63 @@ def get_clientes_primeira_compra():
     conn.close()
     return jsonify(clientes_novos)
 
+# =================================================================
+# ROTA 8: Clientes que já compraram no passado, mas não fazem pedidos há mais de 6 meses
+# =================================================================
+
+@app.route('/api/clientes/inativos', methods=['GET'])
+def get_clientes_inativos():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    
+    # Seleciona clientes cuja ÚLTIMA compra foi há mais de 6 meses
+    # CURRENT_DATE - INTERVAL '6 months' calcula a data limite
+    query = """
+        SELECT c.id_cliente, c.nome_cliente, MAX(p.data_pedido) as ultima_compra
+        FROM Cliente c
+        JOIN Pedido p ON c.id_cliente = p.id_cliente
+        GROUP BY c.id_cliente, c.nome_cliente
+        HAVING MAX(p.data_pedido) < CURRENT_DATE - INTERVAL '6 months'
+        ORDER BY ultima_compra ASC
+    """
+    cursor.execute(query)
+    clientes = cursor.fetchall()
+    
+    conn.close()
+    return jsonify(clientes)
 
 # =================================================================
-# ROTA 8: Recomendacoes de produtos
+# ROTA 9: Clientes cujo gasto médio por pedido é superior à média geral de todos os pedidos da loja
+# =================================================================
+
+@app.route('/api/clientes/high-ticket', methods=['GET'])
+def get_clientes_high_ticket():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    
+    # 1. Calcula a média de TODAS as vendas da loja (Subquery)
+    # 2. Agrupa os pedidos por cliente
+    # 3. Filtra (HAVING) apenas quem tem média pessoal maior que a média global
+    query = """
+        SELECT c.id_cliente, c.nome_cliente, 
+               ROUND(AVG(v.valor_total), 2) as ticket_medio_cliente
+        FROM Cliente c
+        JOIN Pedido p ON c.id_cliente = p.id_cliente
+        JOIN Venda v ON p.id_pedido = v.id_pedido
+        GROUP BY c.id_cliente, c.nome_cliente
+        HAVING AVG(v.valor_total) > (
+            SELECT AVG(valor_total) FROM Venda
+        )
+        ORDER BY ticket_medio_cliente DESC
+    """
+    cursor.execute(query)
+    clientes = cursor.fetchall()
+    
+    conn.close()
+    return jsonify(clientes)
+
+# =================================================================
+# ROTA 10: Recomendacoes de produtos
 # =================================================================
 @app.route('/api/produtos/<int:id_produto>/recomendacoes', methods=['GET'])
 def get_recomendacoes(id_produto):

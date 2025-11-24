@@ -15,7 +15,9 @@ export const cache = {
     descontos: [],
     listaFidelidade: [],
     listaPromocional: [],
-    listaPrimeiraCompra: []
+    listaPrimeiraCompra: [],
+    listaInativos: [],
+    listaHighTicket: []
 };
 
 // Filtros globais

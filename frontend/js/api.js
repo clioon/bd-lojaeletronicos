@@ -67,6 +67,20 @@ export async function buscarClientesPrimeiraCompra() {
     } catch (e) { return []; }
 }
 
+export async function buscarClientesInativos() {
+    try {
+        const res = await fetch(`${API_URL}/clientes/inativos`);
+        return await res.json();
+    } catch (e) { return []; }
+}
+
+export async function buscarClientesHighTicket() {
+    try {
+        const res = await fetch(`${API_URL}/clientes/high-ticket`);
+        return await res.json();
+    } catch (e) { return []; }
+}
+
 export async function buscarRecomendacoes(idProduto) {
     try {
         const res = await fetch(`${API_URL}/produtos/${idProduto}/recomendacoes`);
