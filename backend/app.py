@@ -278,11 +278,7 @@ def get_descontos():
     # Busca apenas descontos que estão marcados como ativos
     cursor.execute("SELECT * FROM desconto_aplicado")
     descontos = cursor.fetchall()
-    for d in descontos:
-        print("desconto: ")
-        print(d)
 
-    
     conn.close()
     return jsonify(descontos)
 
@@ -354,8 +350,49 @@ def get_clientes_primeira_compra():
     return jsonify(clientes_novos)
 
 
+# =================================================================
+# ROTA 8: Recomendacoes de produtos
+# =================================================================
+@app.route('/api/produtos/<int:id_produto>/recomendacoes', methods=['GET'])
+def get_recomendacoes(id_produto):
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+    
+    query = """
+        SELECT 
+            p.id_produto,
+            p.nome_produto as nome,
+            p.preco_unitario as preco,
+            p.categoria,
+            COUNT(*) as relevancia
+        FROM Item_Pedido item_A
+        JOIN Item_Pedido item_B ON item_A.id_pedido = item_B.id_pedido
+        JOIN Produto p ON item_B.id_produto = p.id_produto
+        WHERE item_A.id_produto = %s
+          AND item_B.id_produto != %s
+        GROUP BY p.id_produto, p.nome_produto, p.preco_unitario, p.categoria
+        ORDER BY relevancia DESC
+        LIMIT 3;
+    """
+    
+    cursor.execute(query, (id_produto, id_produto))
+    sugestoes = cursor.fetchall()
 
+    # FALLBACK (Plano B)
+    # Se a query acima não retornar nada (produto novo ou poucas vendas),
+    # retornamos 3 produtos da mesma categoria para não deixar vazio.
+    if not sugestoes:
+        cursor.execute("""
+            SELECT id_produto, nome_produto as nome, preco_unitario as preco, tipo
+            FROM Produto 
+            WHERE id_produto != %s 
+            ORDER BY RANDOM() 
+            LIMIT 3
+        """, (id_produto,))
+        sugestoes = cursor.fetchall()
 
+    conn.close()
+    return jsonify(sugestoes)
 
 
 

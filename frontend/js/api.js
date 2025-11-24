@@ -66,3 +66,13 @@ export async function buscarClientesPrimeiraCompra() {
         return await res.json();
     } catch (e) { return []; }
 }
+
+export async function buscarRecomendacoes(idProduto) {
+    try {
+        const res = await fetch(`${API_URL}/produtos/${idProduto}/recomendacoes`);
+        return await res.json();
+    } catch (e) {
+        console.error(e);
+        return [];
+    }
+}

@@ -1,6 +1,7 @@
 // js/components/productList.js
 import { formatCurrency } from '../utils.js';
 import { showModal } from './modal.js';
+import { buscarRecomendacoes } from '../api.js';
 
 export function renderProductList(container, produtos, onAddToCart) {
     
@@ -95,21 +96,61 @@ export function renderProductList(container, produtos, onAddToCart) {
                 btnAdd.addEventListener('click', () => onAddToCart(p));
             }
 
-            // 2. Botão Detalhes (Abre Modal)
+            // 2. Botão Detalhes (Abre Modal com Recomendações)
             const btnDetails = card.querySelector('.btn-details');
-            btnDetails.addEventListener('click', () => {
+            
+            btnDetails.addEventListener('click', async () => {
+                // Muda texto para dar feedback visual
+                const textoOriginal = btnDetails.innerText;
+                btnDetails.innerText = "...";
+                
+                // 1. Busca as recomendações no Python
+                const recomendados = await buscarRecomendacoes(p.id);
+                
+                btnDetails.innerText = textoOriginal; // Volta texto normal
+
+                // 2. Gera HTML das recomendações
+                let htmlRecomendados = '<p style="color:#777; font-style:italic;">Nenhuma sugestão no momento.</p>';
+                
+                if (recomendados.length > 0) {
+                    const listaHtml = recomendados.map(rec => `
+                        <div style="border:1px solid #eee; padding:10px; border-radius:6px; margin-bottom:5px; display:flex; justify-content:space-between; align-items:center;">
+                            <div>
+                                <strong style="font-size:0.9rem; display:block;">${rec.nome}</strong>
+                                <small class="tag ${rec.tipo ? rec.tipo.toLowerCase() : ''}" style="font-size:0.7rem; padding:2px 5px;">${rec.tipo}</small>
+                            </div>
+                            <span style="color:#0066cc; font-weight:bold;">${formatCurrency(rec.preco)}</span>
+                        </div>
+                    `).join('');
+                    
+                    htmlRecomendados = `
+                        <div style="background:#f9f9f9; padding:10px; border-radius:8px; margin-top:15px;">
+                            <h4 style="margin-bottom:10px; color:#333;">Quem comprou, levou também:</h4>
+                            ${listaHtml}
+                        </div>
+                    `;
+                }
+
+                // 3. Monta o conteúdo final do modal
                 showModal(p.nome, `
-                    <p><strong>Categoria:</strong> ${p.categoria || tipoSafe}</p>
-                    <p><strong>Descrição:</strong> ${p.descricao || '-'}</p>
-                    <p><strong>Preço:</strong> ${formatCurrency(p.preco)}</p>
-                    <hr>
-                    <h4>Detalhes Técnicos:</h4>
-                    <ul>
-                        ${p.specs_hardware ? `<li>Hardware: ${p.specs_hardware}</li>` : ''}
-                        ${p.cor_dispositivo ? `<li>Cor: ${p.cor_dispositivo}</li>` : ''}
-                        ${p.conexao_periferico ? `<li>Conexão: ${p.conexao_periferico}</li>` : ''}
-                        <li>Estoque disponível: ${estoque} unidades</li>
-                    </ul>
+                    <div style="display:grid; gap:10px;">
+                        <div>
+                            <span class="tag ${tipoSafe.toLowerCase()}">${tipoSafe}</span>
+                            <p style="margin-top:10px;"><strong>Descrição:</strong> ${p.descricao || '-'}</p>
+                            
+                            <hr style="margin:10px 0; border:0; border-top:1px solid #eee;">
+                            
+                            <ul style="padding-left:20px; color:#555;">
+                                ${p.specs_hardware ? `<li>${p.specs_hardware}</li>` : ''}
+                                ${p.cor_dispositivo ? `<li>Cor: ${p.cor_dispositivo}</li>` : ''}
+                                <li>Estoque: ${estoque} unidades</li>
+                            </ul>
+                            
+                            <h3 style="margin-top:15px; text-align:right; color:#0066cc;">${formatCurrency(p.preco)}</h3>
+                        </div>
+                        
+                        ${htmlRecomendados}
+                    </div>
                 `);
             });
 
