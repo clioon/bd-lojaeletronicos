@@ -90,3 +90,16 @@ export async function buscarRecomendacoes(idProduto) {
         return [];
     }
 }
+
+export async function criarCliente(dadosCliente) {
+    try {
+        const response = await fetch(`${API_URL}/clientes`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dadosCliente)
+        });
+        return await response.json();
+    } catch (error) {
+        throw error;
+    }
+}

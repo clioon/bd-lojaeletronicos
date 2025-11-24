@@ -105,11 +105,36 @@ function renderApp() {
     }
     // ROTA 4: ADMIN (NOVO)
     else if (state.page === 'admin') {
-        // Só renderiza admin se o role for loja
         if (state.role === 'loja') {
-            renderAdminDashboard(mainContainer, cache.clientes, cache.produtos);
+            
+            // Função para recarregar tudo
+            const carregarDashboard = () => {
+                Promise.all([
+                    buscarClientes(), // IMPORTANTE: Buscar clientes atualizados
+                    buscarProdutos()
+                ]).then(([clientesAtualizados, produtosAtualizados]) => {
+                    
+                    // Atualiza cache
+                    cache.clientes = clientesAtualizados;
+                    cache.produtos = produtosAtualizados;
+
+                    renderAdminDashboard(
+                        mainContainer, 
+                        cache.clientes, 
+                        cache.produtos,
+                        () => { 
+                            // Callback do onReload (Recarrega a tela)
+                            carregarDashboard();
+                        }
+                    );
+                });
+            };
+
+            // Chama a primeira vez
+            carregarDashboard();
+
         } else {
-            mainContainer.innerHTML = '<h2>Acesso Negado</h2>';
+             mainContainer.innerHTML = '<h2>Acesso Negado</h2>';
         }
     }
 

@@ -950,6 +950,51 @@ def recorrencia_mensal():
 
     return jsonify(resposta)
 
+# =================================================================
+# ROTA: Média Mensal de Dias Entre Compras
+# =================================================================
+
+@app.route('/api/clientes', methods=['POST'])
+def criar_cliente():
+    dados = request.json
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # 1. Inserir na tabela Cliente
+        # Usamos CURRENT_DATE para a data de cadastro
+        query_cliente = """
+            INSERT INTO Cliente (nome_cliente, cidade, estado, pais, data_cadastro)
+            VALUES (%s, %s, %s, 'Brasil', CURRENT_DATE)
+            RETURNING id_cliente;
+        """
+        cursor.execute(query_cliente, (
+            dados.get('nome'),
+            dados.get('cidade'),
+            dados.get('estado')
+        ))
+        novo_id = cursor.fetchone()[0]
+
+        # 2. Iniciar tabela de Fidelidade (Zero pontos)
+        query_fidelidade = """
+            INSERT INTO Fidelidade_Cliente (id_cliente, pontos_acumulados)
+            VALUES (%s, 0)
+        """
+        cursor.execute(query_fidelidade, (novo_id,))
+
+        conn.commit()
+        return jsonify({"message": "Cliente cadastrado com sucesso!", "id": novo_id}), 201
+
+    except Exception as e:
+        conn.rollback()
+        print("Erro ao criar cliente:", e)
+        return jsonify({"message": "Erro ao salvar no banco."}), 500
+    
+    finally:
+        cursor.close()
+        conn.close()
+
+
 
 
 if __name__ == '__main__':
