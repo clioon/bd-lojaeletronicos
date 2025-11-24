@@ -13,7 +13,7 @@ export function renderAdminDashboard(container, clientes, produtos) {
     const html = `
         <h2>Painel Administrativo</h2>
 
-       <a href="teste.html" 
+       <a href="relatorio.html" 
             id="btn-relatorios"
             style="
                 background:#007bff;
