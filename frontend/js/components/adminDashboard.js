@@ -1,16 +1,34 @@
 // js/components/adminDashboard.js
 import { formatCurrency } from '../utils.js';
 
+console.log("ADMIN DASHBOARD FOI RENDERIZADO");
+
+
 export function renderAdminDashboard(container, clientes, produtos) {
     
-    // Cálculos simples para as estatísticas (igual tinha no original)
     const totalClientes = clientes.length;
     const totalProdutos = produtos.length;
     const valorEstoque = produtos.reduce((acc, p) => acc + (p.preco * p.estoqueAtual), 0);
 
     const html = `
         <h2>Painel Administrativo</h2>
-        
+
+       <a href="teste.html" 
+            id="btn-relatorios"
+            style="
+                background:#007bff;
+                color:white;
+                padding:10px 18px;
+                border-radius:6px;
+                text-decoration:none;
+                display:inline-block;
+                margin-bottom:20px;
+                font-size:1rem;
+            ">
+            📊 Ver Relatórios
+        </a>
+
+
         <div class="stats-grid">
             <div class="stat-card">
                 <h3>Clientes Ativos</h3>
@@ -54,4 +72,6 @@ export function renderAdminDashboard(container, clientes, produtos) {
     `;
 
     container.innerHTML = html;
+
+
 }
