@@ -1,617 +1,305 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8" />
-    <title>Teste de Gráficos - Backend Flask</title>
-
-    <!-- CHART.JS CDN -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios Gerenciais - Kabom</title>
+    
+    <link rel="stylesheet" href="css/style.css">
+    
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
+        /* Estilos específicos para o Dashboard de Relatórios */
         body {
-            background: #f2f2f2;
-            font-family: Arial;
-            padding: 20px;
+            background-color: #f4f6f8; /* Fundo levemente cinza */
         }
-        h1 {
-            margin-bottom: 40px;
-            text-align: center;
+
+        .admin-header {
+            background: #2c3e50;
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
-        .card {
-            background: #fff;
+
+        .dashboard-container {
+            max-width: 1400px;
+            margin: 2rem auto;
+            padding: 0 1rem;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 20px;
+        }
+
+        .chart-card {
+            background: white;
+            border-radius: 8px;
             padding: 20px;
-            border-radius: 10px;
-            margin: 20px auto;
-            width: 800px;
-            box-shadow: 0 0 8px rgba(0,0,0,.2);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border: 1px solid #eee;
+            /* Garante altura mínima para o gráfico renderizar bem */
+            min-height: 350px; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        .chart-card h3 {
+            color: #444;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            border-left: 4px solid #3498db;
+            padding-left: 10px;
+        }
+
+        /* Container relativo para o Chart.js controlar a responsividade */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            height: 300px;
+        }
+
+        /* Botões */
+        .btn-back {
+            background: rgba(255,255,255,0.1);
+            color: white;
+            text-decoration: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            border: 1px solid rgba(255,255,255,0.2);
+            transition: background 0.2s;
+        }
+        .btn-back:hover { background: rgba(255,255,255,0.2); }
+
+        .btn-print {
+            background: #27ae60;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        /* Responsividade para celular */
+        @media (max-width: 600px) {
+            .dashboard-container { grid-template-columns: 1fr; }
         }
     </style>
 </head>
 <body>
 
-<h1>Teste dos Gráficos (via Flask API)</h1>
+    <header class="admin-header">
+        <div style="display:flex; align-items:center; gap:15px;">
+            <h2 style="margin:0;">Kabom Analytics</h2>
+        </div>
+        <div>
+            <button onclick="window.print()" class="btn-print">🖨️ Imprimir</button>
+            <a href="home.html" class="btn-back">⬅ Voltar para Loja</a>
+        </div>
+    </header>
 
-<!-- GRÁFICO 1 -->
-<div class="card">
-    <h2>Vendas por Categoria</h2>
-    <canvas id="chart1"></canvas>
-</div>
+    <div class="dashboard-container">
 
-<!-- GRÁFICO 2 -->
-<div class="card">
-    <h2>Pedidos por Mês</h2>
-    <canvas id="chart2"></canvas>
-</div>
+        <div class="chart-card">
+            <h3>Faturamento por Categoria</h3>
+            <div class="canvas-container"><canvas id="chart1"></canvas></div>
+        </div>
 
-<!-- GRÁFICO 3 -->
-<div class="card">
-    <h2>Top 5 Produtos Mais Vendidos</h2>
-    <canvas id="chart3"></canvas>
-</div>
+        <div class="chart-card">
+            <h3>Evolução de Pedidos (Mensal)</h3>
+            <div class="canvas-container"><canvas id="chart2"></canvas></div>
+        </div>
 
-<!-- GRÁFICO 4 -->
-<div class="card">
-    <h2>Top 10 Produtos Mais Vendidos</h2>
-    <canvas id="chart4"></canvas>
-</div>
+        <div class="chart-card">
+            <h3>Top 10 Produtos Mais Vendidos</h3>
+            <div class="canvas-container"><canvas id="chart3"></canvas></div>
+        </div>
 
-<!-- GRÁFICO 5 -->
-<div class="card">
-    <h2>Top 10 Clientes por Faturamento</h2>
-    <canvas id="chart5"></canvas>
-</div>
+        <div class="chart-card">
+            <h3>Top 10 Clientes (Faturamento)</h3>
+            <div class="canvas-container"><canvas id="chart5"></canvas></div>
+        </div>
 
-<!-- GRÁFICO 6 -->
-<div class="card">
-    <h2>Pedidos por Status</h2>
-    <canvas id="chart6"></canvas>
-</div>
+        <div class="chart-card">
+            <h3>Status dos Pedidos</h3>
+            <div class="canvas-container"><canvas id="chart6"></canvas></div>
+        </div>
 
-<!-- GRÁFICO 7 -->
-<div class="card">
-    <h2>Pedidos por Prioridade</h2>
-    <canvas id="chart7"></canvas>
-</div>
+        <div class="chart-card">
+            <h3>Métodos de Pagamento</h3>
+            <div class="canvas-container"><canvas id="chart8"></canvas></div>
+        </div>
 
-<!-- GRÁFICO 8 -->
-<div class="card">
-    <h2>Vendas por Forma de Pagamento</h2>
-    <canvas id="chart8"></canvas>
-</div>
+        <div class="chart-card">
+            <h3>🚨 Alerta de Estoque Baixo</h3>
+            <div class="canvas-container"><canvas id="chart9"></canvas></div>
+        </div>
 
-<!-- GRÁFICO 9 -->
-<div class="card">
-    <h2>Estoque Atual x Estoque Mínimo</h2>
-    <canvas id="chart9"></canvas>
-</div>
+        <div class="chart-card">
+            <h3>Vendas por Estado</h3>
+            <div class="canvas-container"><canvas id="chart10"></canvas></div>
+        </div>
+        
+        <div class="chart-card">
+            <h3>Top Produtos por Lucro</h3>
+            <div class="canvas-container"><canvas id="chart12"></canvas></div>
+        </div>
 
-<!-- GRÁFICO 10 -->
-<div class="card">
-    <h2>Pedidos por Estado</h2>
-    <canvas id="chart10"></canvas>
-</div>
+    </div>
 
-<!-- GRÁFICO 11 -->
-<div class="card">
-    <h2>Ticket Médio por Mês</h2>
-    <canvas id="chart11"></canvas>
-</div>
+    <script>
+        const API_URL = "http://localhost:5000";
 
-<!-- GRÁFICO 12 -->
-<div class="card">
-    <h2>Top 10 Produtos por Lucro Total</h2>
-    <canvas id="chart12"></canvas>
-</div>
+        // Configuração global de cores para manter consistência
+        Chart.defaults.font.family = "'Segoe UI', 'Helvetica', 'Arial', sans-serif";
+        Chart.defaults.color = '#666';
+        
+        const COLORS = [
+            'rgba(54, 162, 235, 0.7)',  // Azul
+            'rgba(255, 99, 132, 0.7)',  // Vermelho
+            'rgba(255, 206, 86, 0.7)',  // Amarelo
+            'rgba(75, 192, 192, 0.7)',  // Verde
+            'rgba(153, 102, 255, 0.7)', // Roxo
+            'rgba(255, 159, 64, 0.7)'   // Laranja
+        ];
 
-<!-- GRÁFICO 13 -->
-<!-- <div class="card">
-    <h2>Curva ABC de Produtos</h2>
-    <canvas id="chart13"></canvas>
-</div> -->
+        // --- FUNÇÃO GENÉRICA PARA CRIAR GRÁFICOS ---
+        async function createChart(elementId, endpoint, config) {
+            try {
+                const response = await fetch(`${API_URL}/api/graficos/${endpoint}`);
+                if (!response.ok) throw new Error("Erro na API");
+                
+                const data = await response.json();
+                const ctx = document.getElementById(elementId).getContext('2d');
 
-<!-- GRÁFICO 14 -->
-<div class="card">
-    <h2>Clientes Mais Frequentes (Menor Tempo Entre Compras)</h2>
-    <canvas id="chart14"></canvas>
-</div>
+                // Lógica para montar os dados do Chart.js
+                const chartData = {
+                    labels: data[config.labelsKey], // Ex: data.categorias
+                    datasets: config.customDataset ? config.customDataset(data) : [{
+                        label: config.label || 'Valor',
+                        data: data[config.dataKey],     // Ex: data.totais
+                        backgroundColor: config.color || COLORS[0],
+                        borderColor: config.borderColor || COLORS[0].replace('0.7', '1'),
+                        borderWidth: 1
+                    }]
+                };
 
-<!-- GRÁFICO 15 -->
-<div class="card">
-    <h2>Média Mensal de Dias Entre Compras</h2>
-    <canvas id="chart15"></canvas>
-</div>
+                new Chart(ctx, {
+                    type: config.type || 'bar',
+                    data: chartData,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false, // Importante para caber no card
+                        indexAxis: config.horizontal ? 'y' : 'x',
+                        plugins: {
+                            legend: { display: !!config.showLegend }
+                        }
+                    }
+                });
 
-
-<script>
-    const API_URL = "http://localhost:5000"; // Ajuste se usar outra porta
-
-    // ===============================
-    // GRÁFICO 1 - Vendas por Categoria
-    // ===============================
-    fetch(`${API_URL}/api/graficos/vendas-por-categoria`)
-    .then(res => res.json())
-    .then(data => {
-        new Chart(document.getElementById("chart1"), {
-            type: "bar",
-            data: {
-                labels: data.categorias,
-                datasets: [{
-                    label: "Total vendido (R$)",
-                    data: data.totais,
-                    backgroundColor: "rgba(54, 162, 235, 0.6)"
-                }]
+            } catch (error) {
+                console.error(`Erro ao carregar gráfico ${elementId}:`, error);
+                document.getElementById(elementId).parentElement.innerHTML = 
+                    `<p style="color:red; text-align:center; padding-top:40px;">Erro ao carregar dados.</p>`;
             }
+        }
+
+        // --- INICIALIZAÇÃO DOS GRÁFICOS ---
+        document.addEventListener("DOMContentLoaded", () => {
+            
+            // 1. Vendas por Categoria
+            createChart('chart1', 'vendas-por-categoria', {
+                labelsKey: 'categorias',
+                dataKey: 'totais',
+                label: 'Total Vendido (R$)',
+                color: COLORS
+            });
+
+            // 2. Pedidos por Mês (Linha)
+            createChart('chart2', 'pedidos-por-mes', {
+                type: 'line',
+                labelsKey: 'meses',
+                dataKey: 'total',
+                label: 'Volume de Pedidos',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                color: 'rgba(54, 162, 235, 0.1)' // Preenchimento suave
+            });
+
+            // 3. Top Produtos (Barra Horizontal)
+            createChart('chart3', 'top-produtos', {
+                horizontal: true,
+                labelsKey: 'produtos',
+                dataKey: 'quantidades',
+                label: 'Unidades Vendidas',
+                color: COLORS[3] // Verde
+            });
+
+            // 5. Top Clientes
+            createChart('chart5', 'faturamento-por-cliente', {
+                labelsKey: 'clientes',
+                dataKey: 'totais',
+                label: 'Gasto Total (R$)',
+                color: COLORS[4] // Roxo
+            });
+
+            // 6. Status (Pizza)
+            createChart('chart6', 'pedidos-por-status', {
+                type: 'doughnut',
+                labelsKey: 'status',
+                dataKey: 'quantidades',
+                showLegend: true,
+                color: COLORS
+            });
+
+            // 8. Pagamentos (Pizza)
+            createChart('chart8', 'vendas-por-forma-pagamento', {
+                type: 'pie',
+                labelsKey: 'formas',
+                dataKey: 'quantidades',
+                showLegend: true,
+                color: COLORS
+            });
+
+            // 9. Estoque Crítico (Gráfico complexo com 2 barras)
+            createChart('chart9', 'estoque-minimo-atual', {
+                labelsKey: 'produtos',
+                showLegend: true,
+                customDataset: (data) => [
+                    {
+                        label: 'Estoque Atual',
+                        data: data.atual,
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                    },
+                    {
+                        label: 'Mínimo Seguro',
+                        data: data.minimo,
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)' // Vermelho alerta
+                    }
+                ]
+            });
+
+            // 10. Estados
+            createChart('chart10', 'pedidos-por-estado', {
+                horizontal: true,
+                labelsKey: 'estados',
+                dataKey: 'quantidades',
+                label: 'Pedidos',
+                color: COLORS[5]
+            });
+
+            // 12. Lucro
+            createChart('chart12', 'lucro-por-produto', {
+                labelsKey: 'produtos',
+                dataKey: 'lucros',
+                label: 'Lucro (R$)',
+                color: COLORS[2] // Amarelo
+            });
+
         });
-    })
-    .catch(err => console.error("Erro gráfico 1:", err));
-
-    // ===============================
-    // GRÁFICO 2 - Pedidos por mês
-    // ===============================
-    fetch(`${API_URL}/api/graficos/pedidos-por-mes`)
-    .then(res => res.json())
-    .then(data => {
-        new Chart(document.getElementById("chart2"), {
-            type: "line",
-            data: {
-                labels: data.meses,
-                datasets: [{
-                    label: "Pedidos",
-                    data: data.total,
-                    borderColor: "red",
-                    borderWidth: 2
-                }]
-            }
-        });
-    })
-    .catch(err => console.error("Erro gráfico 2:", err));
-
-    // ===============================
-    // GRÁFICO 3 - Top produtos (BARRAS)
-    // ===============================
-    fetch(`${API_URL}/api/graficos/top-produtos`)
-        .then(res => res.json())
-        .then(data => {
-            new Chart(document.getElementById("chart3"), {
-                type: "bar",
-                data: {
-                    labels: data.produtos,
-                    datasets: [{
-                        label: "Quantidade vendida",
-                        data: data.quantidades,
-                        backgroundColor: [
-                            "rgba(255, 99, 132, 0.6)",
-                            "rgba(54, 162, 235, 0.6)",
-                            "rgba(255, 206, 86, 0.6)",
-                            "rgba(75, 192, 192, 0.6)",
-                            "rgba(153, 102, 255, 0.6)"
-                        ]
-                    }]
-                },
-                options: {
-                    indexAxis: "y",
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-
-            });
-        })
-        .catch(err => console.error("Erro gráfico 3:", err));
-
-
-    // ===============================
-    // GRÁFICO 4 - Vendas por Produto
-    // ===============================
-    fetch(`${API_URL}/api/graficos/vendas-por-produto`)
-        .then(res => res.json())
-        .then(data => {
-            new Chart(document.getElementById("chart4"), {
-                type: "bar",
-                data: {
-                    labels: data.produtos,
-                    datasets: [{
-                        label: "Quantidade vendida",
-                        data: data.quantidades,
-                        backgroundColor: "rgba(75, 192, 192, 0.6)"
-                    }]
-                }
-            });
-        })
-        .catch(err => console.error("Erro gráfico 2:", err));
-
-    // ===============================
-    // GRÁFICO 5 - Faturamento por Cliente
-    // ===============================
-    fetch(`${API_URL}/api/graficos/faturamento-por-cliente`)
-        .then(res => res.json())
-        .then(data => {
-            new Chart(document.getElementById("chart5"), {
-                type: "bar",
-                data: {
-                    labels: data.clientes,
-                    datasets: [{
-                        label: "Valor gasto (R$)",
-                        data: data.totais,
-                        backgroundColor: "rgba(54, 162, 235, 0.6)"
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-        })
-        .catch(err => console.error("Erro gráfico 5:", err));
-
-    // ===============================
-    // GRÁFICO 6 - Pedidos por Status
-    // ===============================
-    fetch(`${API_URL}/api/graficos/pedidos-por-status`)
-        .then(res => res.json())
-        .then(data => {
-            new Chart(document.getElementById("chart6"), {
-                type: "bar",
-                data: {
-                    labels: data.status,
-                    datasets: [{
-                        label: "Quantidade de pedidos",
-                        data: data.quantidades,
-                        backgroundColor: [
-                            "rgba(255,99,132,0.6)",
-                            "rgba(54,162,235,0.6)",
-                            "rgba(255,206,86,0.6)",
-                            "rgba(75,192,192,0.6)",
-                            "rgba(153,102,255,0.6)"
-                        ]
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-        })
-        .catch(err => console.error("Erro gráfico 6:", err));
-
-    // ===============================
-    // GRÁFICO 7 - Pedidos por Prioridade
-    // ===============================
-    fetch(`${API_URL}/api/graficos/pedidos-por-prioridade`)
-        .then(res => res.json())
-        .then(data => {
-            new Chart(document.getElementById("chart7"), {
-                type: "bar",
-                data: {
-                    labels: data.prioridades,
-                    datasets: [{
-                        label: "Quantidade de pedidos",
-                        data: data.quantidades,
-                        backgroundColor: [
-                            "rgba(255, 159, 64, 0.6)",
-                            "rgba(54, 162, 235, 0.6)",
-                            "rgba(255, 99, 132, 0.6)"
-                        ]
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-        })
-        .catch(err => console.error("Erro gráfico 7:", err));
-
-    // ====================================
-    // GRÁFICO 8 - Vendas por Forma de Pagamento
-    // ====================================
-    fetch(`${API_URL}/api/graficos/vendas-por-forma-pagamento`)
-        .then(res => res.json())
-        .then(data => {
-            new Chart(document.getElementById("chart8"), {
-                type: "bar",
-                data: {
-                    labels: data.formas,
-                    datasets: [{
-                        label: "Quantidade de vendas",
-                        data: data.quantidades,
-                        backgroundColor: [
-                            "rgba(54, 162, 235, 0.6)",
-                            "rgba(255, 99, 132, 0.6)",
-                            "rgba(255, 206, 86, 0.6)",
-                            "rgba(75, 192, 192, 0.6)",
-                            "rgba(153, 102, 255, 0.6)",
-                            "rgba(255, 159, 64, 0.6)"
-                        ]
-                    }]
-                },
-                options: {
-                    plugins: {
-                        legend: { display: false }
-                    },
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-        })
-        .catch(err => console.error("Erro gráfico 8:", err));
-
-    // =============================================
-    // GRÁFICO 9 - Estoque Atual x Estoque Mínimo
-    // =============================================
-    fetch(`${API_URL}/api/graficos/estoque-minimo-atual`)
-        .then(res => res.json())
-        .then(data => {
-            new Chart(document.getElementById("chart9"), {
-                type: "bar",
-                data: {
-                    labels: data.produtos,
-                    datasets: [
-                        {
-                            label: "Estoque Atual",
-                            data: data.atual,
-                            backgroundColor: "rgba(54, 162, 235, 0.6)"
-                        },
-                        {
-                            label: "Estoque Mínimo",
-                            data: data.minimo,
-                            backgroundColor: "rgba(255, 99, 132, 0.6)"
-                        }
-                    ]
-                },
-                options: {
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-        })
-        .catch(err => console.error("Erro gráfico 9:", err));
-
-    // =====================================
-    // GRÁFICO 10 - Pedidos por Estado
-    // =====================================
-    fetch(`${API_URL}/api/graficos/pedidos-por-estado`)
-        .then(res => res.json())
-        .then(data => {
-            new Chart(document.getElementById("chart10"), {
-                type: "bar",
-                data: {
-                    labels: data.estados,
-                    datasets: [{
-                        label: "Quantidade de pedidos",
-                        data: data.quantidades,
-                        backgroundColor: "rgba(75, 192, 192, 0.6)"
-                    }]
-                },
-                options: {
-                    indexAxis: "y",
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-        })
-        .catch(err => console.error("Erro gráfico 10:", err));
-
-    // ==========================================
-    // GRÁFICO 11 - Ticket Médio por Mês
-    // ==========================================
-    fetch(`${API_URL}/api/graficos/ticket-medio-mensal`)
-        .then(res => res.json())
-        .then(data => {
-            new Chart(document.getElementById("chart11"), {
-                type: "line",
-                data: {
-                    labels: data.meses,
-                    datasets: [{
-                        label: "Ticket Médio (R$)",
-                        data: data.tickets,
-                        fill: false,
-                        borderWidth: 2,
-                        borderColor: "rgba(54, 162, 235, 0.9)",
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: false
-                        }
-                    }
-                }
-            });
-        })
-        .catch(err => console.error("Erro gráfico 11:", err));
-
-    // ==========================================
-    // GRÁFICO 12 - Lucro por Produto
-    // ==========================================
-    fetch(`${API_URL}/api/graficos/lucro-por-produto`)
-        .then(res => res.json())
-        .then(data => {
-            new Chart(document.getElementById("chart12"), {
-                type: "bar",
-                data: {
-                    labels: data.produtos,
-                    datasets: [{
-                        label: "Lucro Total (R$)",
-                        data: data.lucros,
-                        backgroundColor: "rgba(255, 159, 64, 0.6)"
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: false
-                        }
-                    }
-                }
-            });
-        })
-        .catch(err => console.error("Erro gráfico 12:", err));
-
-    // ================================================================
-    // GRÁFICO 13 - Curva ABC Estilo Salescope
-    // ================================================================
-    // fetch(`${API_URL}/api/graficos/curva-abc`)
-    //     .then(res => res.json())
-    //     .then(data => {
-
-    //         const areaABC = {
-    //             id: "areaABC",
-    //             beforeDraw(chart) {
-    //                 const { ctx, chartArea: area, scales } = chart;
-    //                 const x = scales.x;
-    //                 const y = scales.y;
-
-    //                 ctx.save();
-
-    //                 // ----------- FUNÇÃO PARA PREENCHER ÁREA CURVA -----------
-    //                 function fillRegion(fromPct, toPct, color) {
-    //                     ctx.beginPath();
-    //                     ctx.moveTo(x.getPixelForValue(0), y.getPixelForValue(fromPct));
-
-    //                     for (let i = 0; i < data.acumulado.length; i++) {
-    //                         const px = x.getPixelForValue(i);
-    //                         const py = y.getPixelForValue(data.acumulado[i]);
-    //                         if (data.acumulado[i] >= fromPct && data.acumulado[i] <= toPct) {
-    //                             ctx.lineTo(px, py);
-    //                         }
-    //                     }
-
-    //                     // fechar até o eixo inferior do próprio intervalo
-    //                     ctx.lineTo(x.getPixelForValue(data.acumulado.length - 1), y.getPixelForValue(toPct));
-    //                     ctx.lineTo(x.getPixelForValue(0), y.getPixelForValue(toPct));
-
-    //                     ctx.closePath();
-    //                     ctx.fillStyle = color;
-    //                     ctx.fill();
-    //                 }
-
-    //                 // ---------------- PINTAR AS 3 FAIXAS -------------------
-    //                 fillRegion(0, 80, "rgba(198, 40, 40, 0.35)");    // A Vermelho
-    //                 fillRegion(80, 95, "rgba(21, 101, 192, 0.35)");   // B Azul
-    //                 fillRegion(95, 100, "rgba(239, 108, 0, 0.35)");   // C Laranja
-
-    //                 // ----------------- DESENHAR LETRAS ---------------------
-    //                 ctx.fillStyle = "white";
-    //                 ctx.font = "bold 32px Arial";
-    //                 ctx.textAlign = "center";
-
-    //                 // posição aproximada das áreas
-    //                 const xMid = v => x.getPixelForValue(v);
-
-    //                 ctx.fillText("A", xMid(data.acumulado.length * 0.10), y.getPixelForValue(40));
-    //                 ctx.fillText("B", xMid(data.acumulado.length * 0.45), y.getPixelForValue(87));
-    //                 ctx.fillText("C", xMid(data.acumulado.length * 0.80), y.getPixelForValue(97));
-
-    //                 ctx.restore();
-    //             }
-    //         };
-
-    //         new Chart(document.getElementById("chart13"), {
-    //             type: "line",
-    //             data: {
-    //                 labels: data.produtos,
-    //                 datasets: [{
-    //                     data: data.acumulado,
-    //                     borderColor: "rgba(0,0,0,0.9)",
-    //                     borderWidth: 3,
-    //                     pointRadius: 0,
-    //                     tension: 0.35, // curva suave
-    //                     fill: false
-    //                 }]
-    //             },
-    //             options: {
-    //                 plugins: {
-    //                     legend: { display: false }
-    //                 },
-    //                 scales: {
-    //                     y: {
-    //                         min: 0,
-    //                         max: 100,
-    //                         title: { display: true, text: "% Acumulado" }
-    //                     },
-    //                     x: {
-    //                         ticks: { display: false }
-    //                     }
-    //                 }
-    //             },
-    //             plugins: [areaABC]
-    //         });
-    //     });
-
-    // =========================================================
-    // GRÁFICO 14 - Recorrência por Cliente (Ranking)
-    // =========================================================
-    fetch(`${API_URL}/api/graficos/recorrencia-clientes`)
-        .then(res => res.json())
-        .then(data => {
-            new Chart(document.getElementById("chart14"), {
-                type: "bar",
-                data: {
-                    labels: data.clientes,
-                    datasets: [{
-                        label: "Dias médios entre compras",
-                        data: data.dias,
-                        backgroundColor: "rgba(99, 132, 255, 0.6)"
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: { beginAtZero: true }
-                    }
-                }
-            });
-        })
-        .catch(err => console.error("Erro gráfico 14:", err));
-
-    // =========================================================
-    // GRÁFICO 15 - Recorrência Mensal
-    // =========================================================
-    fetch(`${API_URL}/api/graficos/recorrencia-mensal`)
-        .then(res => res.json())
-        .then(data => {
-            new Chart(document.getElementById("chart15"), {
-                type: "bar",
-                data: {
-                    labels: data.meses,
-                    datasets: [{
-                        label: "Dias médios entre compras",
-                        data: data.dias,
-                        borderColor: "rgba(255, 99, 132, 0.9)",
-                        borderWidth: 2,
-                        fill: false,
-                        tension: 0.3
-                    }]
-                },
-                options: {
-                    scales: {
-                        y: {
-                            beginAtZero: false
-                        }
-                    }
-                }
-            });
-        })
-        .catch(err => console.error("Erro gráfico 15:", err));
-
-
-</script>
-
+    </script>
 </body>
 </html>

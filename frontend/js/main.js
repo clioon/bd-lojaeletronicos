@@ -51,7 +51,7 @@ async function init() {
         
         // Simula login com o primeiro cliente do banco
         if (cache.clientes.length > 0) {
-            state.user = cache.clientes[35];
+            state.user = cache.clientes[0];
         }
 
         renderApp();
