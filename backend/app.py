@@ -448,7 +448,507 @@ def get_recomendacoes(id_produto):
     conn.close()
     return jsonify(sugestoes)
 
+# =================================================================
+# ROTA: Vendas por categoria
+# =================================================================
+@app.route('/api/graficos/vendas-por-categoria', methods=['GET'])
+def vendas_por_categoria():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
 
+    query = """
+        SELECT p.categoria, SUM(i.valor_total_item) AS total
+        FROM Item_Pedido i
+        JOIN Produto p ON p.id_produto = i.id_produto
+        GROUP BY p.categoria
+        ORDER BY total DESC;
+    """
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+
+    conn.close()
+
+    # Converter para formato que o frontend já entende
+    resposta = {
+        "categorias": [row["categoria"] for row in dados],
+        "totais":     [float(row["total"]) for row in dados]
+    }
+
+    return jsonify(resposta)
+
+# =================================================================
+# ROTA: Pedidos por mês
+# =================================================================
+@app.route('/api/graficos/pedidos-por-mes', methods=['GET'])
+def pedidos_por_mes():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    query = """
+        SELECT 
+            TO_CHAR(data_pedido, 'YYYY-MM') AS mes,
+            COUNT(*) AS total
+        FROM Pedido
+        GROUP BY mes
+        ORDER BY mes;
+    """
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+    conn.close()
+
+    return jsonify({
+        "meses": [row["mes"] for row in dados],
+        "total": [row["total"] for row in dados]
+    })
+
+# =================================================================
+# ROTA: Quantidade de Produtos Vendidos
+# =================================================================
+@app.route('/api/graficos/top-produtos', methods=['GET'])
+def top_produtos():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    query = """
+        SELECT p.nome_produto AS nome, SUM(i.quantidade) AS qtd
+        FROM Item_Pedido i
+        JOIN Produto p ON p.id_produto = i.id_produto
+        GROUP BY nome
+        ORDER BY qtd DESC
+        LIMIT 5;
+    """
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+    conn.close()
+
+    return jsonify({
+        "produtos": [row["nome"] for row in dados],
+        "quantidades": [row["qtd"] for row in dados]
+    })
+
+# =================================================================
+# ROTA: Vendas por Produto (Top 10)
+# =================================================================
+@app.route('/api/graficos/vendas-por-produto', methods=['GET'])
+def vendas_por_produto():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    query = """
+        SELECT 
+            p.nome_produto,
+            SUM(i.quantidade) AS total_vendido
+        FROM Item_Pedido i
+        JOIN Produto p ON p.id_produto = i.id_produto
+        GROUP BY p.nome_produto
+        ORDER BY total_vendido DESC
+        LIMIT 10;
+    """
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+    conn.close()
+
+    resposta = {
+        "produtos": [row["nome_produto"] for row in dados],
+        "quantidades": [int(row["total_vendido"]) for row in dados]
+    }
+
+    return jsonify(resposta)
+
+    # =================================================================
+# ROTA: Faturamento por Cliente (Top 10)
+# =================================================================
+@app.route('/api/graficos/faturamento-por-cliente', methods=['GET'])
+def faturamento_por_cliente():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    query = """
+        SELECT 
+            c.nome_cliente,
+            SUM(v.valor_total) AS total_gasto
+        FROM Venda v
+        JOIN Pedido p ON p.id_pedido = v.id_pedido
+        JOIN Cliente c ON c.id_cliente = p.id_cliente
+        GROUP BY c.nome_cliente
+        ORDER BY total_gasto DESC
+        LIMIT 10;
+    """
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+    conn.close()
+
+    resposta = {
+        "clientes": [row["nome_cliente"] for row in dados],
+        "totais":   [float(row["total_gasto"]) for row in dados]
+    }
+
+    return jsonify(resposta)
+
+    # =================================================================
+# ROTA: Pedidos por Status
+# =================================================================
+@app.route('/api/graficos/pedidos-por-status', methods=['GET'])
+def pedidos_por_status():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    query = """
+        SELECT 
+            status_pedido,
+            COUNT(*) AS quantidade
+        FROM Pedido
+        GROUP BY status_pedido
+        ORDER BY status_pedido;
+    """
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+    conn.close()
+
+    resposta = {
+        "status":      [row["status_pedido"] for row in dados],
+        "quantidades": [int(row["quantidade"]) for row in dados]
+    }
+
+    return jsonify(resposta)
+
+# =================================================================
+# ROTA: Pedidos por Prioridade
+# =================================================================
+@app.route('/api/graficos/pedidos-por-prioridade', methods=['GET'])
+def pedidos_por_prioridade():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    query = """
+        SELECT 
+            prioridade_pedido,
+            COUNT(*) AS quantidade
+        FROM Pedido
+        GROUP BY prioridade_pedido
+        ORDER BY prioridade_pedido;
+    """
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+    conn.close()
+
+    resposta = {
+        "prioridades": [row["prioridade_pedido"] for row in dados],
+        "quantidades": [int(row["quantidade"]) for row in dados]
+    }
+
+    return jsonify(resposta)
+
+# =================================================================
+# ROTA: Vendas por Forma de Pagamento
+# =================================================================
+@app.route('/api/graficos/vendas-por-forma-pagamento', methods=['GET'])
+def vendas_por_forma_pagamento():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    query = """
+        SELECT 
+            forma_pagamento,
+            COUNT(*) AS quantidade
+        FROM Pagamento
+        GROUP BY forma_pagamento
+        ORDER BY forma_pagamento;
+    """
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+    conn.close()
+
+    resposta = {
+        "formas":      [row["forma_pagamento"] for row in dados],
+        "quantidades": [int(row["quantidade"]) for row in dados]
+    }
+
+    return jsonify(resposta)
+
+# =================================================================
+# ROTA: Estoque Atual x Estoque Mínimo
+# =================================================================
+@app.route('/api/graficos/estoque-minimo-atual', methods=['GET'])
+def estoque_minimo_atual():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    query = """
+        SELECT 
+            nome_produto,
+            estoque_atual,
+            estoque_minimo
+        FROM Produto
+        ORDER BY nome_produto;
+    """
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+    conn.close()
+
+    resposta = {
+        "produtos": [row["nome_produto"] for row in dados],
+        "atual":    [int(row["estoque_atual"]) for row in dados],
+        "minimo":   [int(row["estoque_minimo"]) for row in dados]
+    }
+
+    return jsonify(resposta)
+
+# =================================================================
+# ROTA: Pedidos por Estado
+# =================================================================
+@app.route('/api/graficos/pedidos-por-estado', methods=['GET'])
+def pedidos_por_estado():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    query = """
+        SELECT 
+            c.estado,
+            COUNT(*) AS quantidade
+        FROM Pedido p
+        JOIN Cliente c ON c.id_cliente = p.id_cliente
+        GROUP BY c.estado
+        ORDER BY quantidade DESC;
+    """
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+    conn.close()
+
+    resposta = {
+        "estados":     [row["estado"] for row in dados],
+        "quantidades": [int(row["quantidade"]) for row in dados]
+    }
+
+    return jsonify(resposta)
+
+# =================================================================
+# ROTA: Ticket Médio por Mês
+# =================================================================
+@app.route('/api/graficos/ticket-medio-mensal', methods=['GET'])
+def ticket_medio_mensal():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    query = """
+        SELECT 
+            TO_CHAR(DATE_TRUNC('month', p.data_pedido), 'YYYY-MM') AS mes,
+            ROUND(SUM(v.valor_total) / COUNT(p.id_pedido), 2) AS ticket_medio
+        FROM Pedido p
+        JOIN Venda v ON v.id_pedido = p.id_pedido
+        GROUP BY DATE_TRUNC('month', p.data_pedido)
+        ORDER BY DATE_TRUNC('month', p.data_pedido);
+    """
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+    conn.close()
+
+    resposta = {
+        "meses":  [row["mes"] for row in dados],
+        "tickets": [float(row["ticket_medio"]) for row in dados]
+    }
+
+    return jsonify(resposta)
+
+# =================================================================
+# ROTA: Lucro por Produto (Top 10)
+# =================================================================
+@app.route('/api/graficos/lucro-por-produto', methods=['GET'])
+def lucro_por_produto():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    query = """
+        SELECT 
+            p.nome_produto,
+            ROUND(SUM((p.preco_unitario - p.custo_unitario) * i.quantidade), 2) AS lucro_total
+        FROM Item_Pedido i
+        JOIN Produto p ON p.id_produto = i.id_produto
+        GROUP BY p.nome_produto
+        HAVING SUM(i.quantidade) > 0
+        ORDER BY lucro_total DESC
+        LIMIT 10;
+    """
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+    conn.close()
+
+    resposta = {
+        "produtos": [row["nome_produto"] for row in dados],
+        "lucros":   [float(row["lucro_total"]) for row in dados]
+    }
+
+    return jsonify(resposta)
+
+# =================================================================
+# ROTA: Curva ABC de Produtos (Pareto)
+# =================================================================
+# @app.route('/api/graficos/curva-abc', methods=['GET'])
+# def curva_abc():
+#     conn = get_db_connection()
+#     cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+#     query = """
+#         WITH faturamento AS (
+#             SELECT
+#                 p.nome_produto,
+#                 SUM(i.valor_total_item) AS receita
+#             FROM Item_Pedido i
+#             JOIN Produto p ON p.id_produto = i.id_produto
+#             GROUP BY p.nome_produto
+#         ),
+#         acumulado AS (
+#             SELECT 
+#                 nome_produto,
+#                 receita,
+#                 receita / SUM(receita) OVER() AS perc_individual,
+#                 SUM(receita) OVER(ORDER BY receita DESC) / SUM(receita) OVER() AS perc_acumulado
+#             FROM faturamento
+#             ORDER BY receita DESC
+#         )
+#         SELECT
+#             nome_produto,
+#             ROUND(receita, 2) AS receita,
+#             ROUND(perc_individual * 100, 2) AS perc_individual,
+#             ROUND(perc_acumulado * 100, 2) AS perc_acumulado,
+#             CASE 
+#                 WHEN perc_acumulado <= 0.80 THEN 'A'
+#                 WHEN perc_acumulado <= 0.95 THEN 'B'
+#                 ELSE 'C'
+#             END AS classe
+#         FROM acumulado;
+#     """
+
+#     cursor.execute(query)
+#     dados = cursor.fetchall()
+#     conn.close()
+
+#     resposta = {
+#         "produtos":       [row["nome_produto"] for row in dados],
+#         "receitas":       [float(row["receita"]) for row in dados],
+#         "perc_acum":      [float(row["perc_acumulado"]) for row in dados],
+#         "classes":        [row["classe"] for row in dados]
+#     }
+
+#     return jsonify(resposta)
+
+# =================================================================
+# ROTA: Dias Médios Entre Compras por Cliente
+# =================================================================
+@app.route('/api/graficos/recorrencia-clientes', methods=['GET'])
+def recorrencia_clientes():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    query = """
+        WITH compras AS (
+            SELECT 
+                p.id_cliente,
+                c.nome_cliente,
+                p.data_pedido,
+                LAG(p.data_pedido) OVER (
+                    PARTITION BY p.id_cliente
+                    ORDER BY p.data_pedido
+                ) AS compra_anterior
+            FROM Pedido p
+            JOIN Cliente c ON c.id_cliente = p.id_cliente
+        ),
+        diffs AS (
+            SELECT
+                nome_cliente,
+                EXTRACT(
+                    EPOCH FROM (
+                        CAST(data_pedido AS timestamp) 
+                        - CAST(compra_anterior AS timestamp)
+                    )
+                ) / 86400 AS dias
+            FROM compras
+            WHERE compra_anterior IS NOT NULL
+        )
+        SELECT 
+            nome_cliente,
+            ROUND(AVG(dias), 2) AS dias_medio
+        FROM diffs
+        GROUP BY nome_cliente
+        HAVING AVG(dias) IS NOT NULL
+        ORDER BY dias_medio ASC
+        LIMIT 20;
+    """
+
+
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+    conn.close()
+
+    resposta = {
+        "clientes": [row["nome_cliente"] for row in dados],
+        "dias":     [float(row["dias_medio"]) for row in dados]
+    }
+
+    return jsonify(resposta)
+
+# =================================================================
+# ROTA: Média Mensal de Dias Entre Compras
+# =================================================================
+@app.route('/api/graficos/recorrencia-mensal', methods=['GET'])
+def recorrencia_mensal():
+    conn = get_db_connection()
+    cursor = conn.cursor(cursor_factory=RealDictCursor)
+
+    query = """
+        WITH compras AS (
+            SELECT 
+                p.id_cliente,
+                p.data_pedido,
+                LAG(p.data_pedido) OVER (
+                    PARTITION BY p.id_cliente
+                    ORDER BY p.data_pedido
+                ) AS compra_anterior
+            FROM Pedido p
+        ),
+        diffs AS (
+            SELECT
+                DATE_TRUNC('month', data_pedido) AS mes,
+                EXTRACT(
+                    EPOCH FROM (
+                        CAST(data_pedido AS timestamp) 
+                        - CAST(compra_anterior AS timestamp)
+                    )
+                ) / 86400 AS dias
+            FROM compras
+            WHERE compra_anterior IS NOT NULL
+        )
+        SELECT
+            TO_CHAR(mes, 'YYYY-MM') AS mes_formatado,
+            ROUND(AVG(dias), 2) AS dias_medio
+        FROM diffs
+        GROUP BY mes
+        ORDER BY mes;
+    """
+
+    cursor.execute(query)
+    dados = cursor.fetchall()
+    conn.close()
+
+    resposta = {
+        "meses": [row["mes_formatado"] for row in dados],
+        "dias":  [float(row["dias_medio"]) for row in dados]
+    }
+
+    return jsonify(resposta)
 
 
 
