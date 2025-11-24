@@ -220,89 +220,134 @@ function renderCarrinho(container) {
 
 // Modal de Seleção de Descontos
 function abrirModalDescontos() {
-    if (cache.descontos.length === 0) {
-        alert("Não há cupons disponíveis.");
-        return;
-    }
-
     const usuario = state.user; 
-    
-    // Se não tiver usuário logado, assume que não está em lista nenhuma
     const idUsuario = usuario ? usuario.id : -1;
 
-    // === LÓGICA DAS ROTAS ===
-    // Verifica se o ID do usuario logado existe dentro das listas que baixamos
-    
-    // Lista Fidelidade (veio da rota /api/clientes/fidelidade)
-    // .some() retorna true se encontrar o ID lá dentro
+    // 1. VERIFICA ELEGIBILIDADE (Checa se o ID está nas listas baixadas do Python)
     const ehFidelidade = cache.listaFidelidade.some(c => c.id_cliente === idUsuario);
-    
-    // Lista Promocional (veio da rota /api/clientes/promocional)
     const ehPromocional = cache.listaPromocional.some(c => c.id_cliente === idUsuario);
-
     const ehPrimeiraCompra = cache.listaPrimeiraCompra.some(c => c.id_cliente === idUsuario);
 
+    // 2. CONSTRÓI AS OPÇÕES DISPONÍVEIS (Hardcoded no Front)
+    let opcoesDisponiveis = [];
 
-    const cuponsValidos = cache.descontos.filter(d => {
-        
-        // REGRA 1: Cupom ID 2 (Ex: "Cliente VIP")
-        // Só aparece se a variavel 'ehFidelidade' for verdadeira
-        if (d.id_desconto === 3) {
-            return ehFidelidade; 
-        }
+    // Opção A: Desconto de Primeira Compra
+    if (ehPrimeiraCompra) {
+        opcoesDisponiveis.push({
+            tipo: 'promocional', // Mapeando para o ENUM do banco (pode ser 'promocional' ou 'outros')
+            titulo: 'Primeira Compra',
+            descricao: 'Boas-vindas! Ganhe desconto na sua estreia.',
+            porcentagem: 10, // Hardcoded: 10%
+            estilo: 'azul'
+        });
+    }
 
-        // REGRA 2: Cupom ID 4 (Ex: "Desconto Gamer")
-        // Só aparece se a variavel 'ehPromocional' for verdadeira
-        if (d.id_desconto === 2) { // Supondo ID 4
-            return ehPromocional;
-        }
-        
-        // REGRA 3: Cupom "Primeira Compra" (ID 1)
-        // Esse podemos manter checando o totalPedidos do próprio objeto usuario se quiser,
-        // ou criar uma rota só pra "novos clientes". 
-        // Vamos manter pelo objeto usuario por enquanto pois é simples:
-        if (d.id_desconto === 1) {
-            return ehPrimeiraCompra;
-        }
+    // Opção B: Desconto Gamer (Promocional)
+    if (ehPromocional) {
+        opcoesDisponiveis.push({
+            tipo: 'promocional', // ENUM do banco
+            titulo: 'Desconto Gamer',
+            descricao: 'Especial para quem compra periféricos.',
+            porcentagem: 15, // Hardcoded: 15%
+            estilo: 'laranja'
+        });
+    }
 
-        return true; 
-    });
+    // Opção C: Desconto VIP (Fidelidade)
+    if (ehFidelidade) {
+        opcoesDisponiveis.push({
+            tipo: 'fidelidade', // ENUM do banco
+            titulo: 'Cliente VIP',
+            descricao: 'Recompensa por sua fidelidade.',
+            porcentagem: 20, // Hardcoded: 20%
+            estilo: 'roxo'
+        });
+    }
 
-    if (cuponsValidos.length === 0) {
-        alert("Você não se qualifica para os cupons especiais (VIP ou Promo).");
+    // Se não tiver nenhuma opção
+    if (opcoesDisponiveis.length === 0) {
+        alert("Nenhum desconto disponível para o seu perfil no momento.");
         return;
     }
 
-    // --- GERA O HTML APENAS COM OS VÁLIDOS ---
-    const htmlLista = cuponsValidos.map(d => `
-        <div class="cupom-item" data-id="${d.id_desconto}" style="padding:15px; border:1px dashed #aaa; margin-bottom:10px; cursor:pointer; border-radius:6px; background-color: white;">
-            <div style="font-weight:bold; color:#2e7d32; pointer-events: none;">${d.tipo}</div>
-            <div style="font-size:0.9rem; color:#555; pointer-events: none;">${d.descricao}</div>
-            <div style="font-size:0.8rem; background:#e8f5e9; display:inline-block; padding:2px 8px; border-radius:4px; margin-top:5px; pointer-events: none;">${d.porcentagem}% OFF</div>
-            ${d.id_desconto === 2 ? '<small style="color:gold; display:block">Exclusivo VIP</small>' : ''}
-        </div>
-    `).join('');
+    // 3. RENDERIZAÇÃO VISUAL
+    // Configuração de cores baseada no 'estilo' que definimos acima
+    const estilos = {
+        'roxo':    { cor: '#6a1b9a', bg: '#f3e5f5', icone: '👑' },
+        'laranja': { cor: '#e65100', bg: '#fff3e0', icone: '🔥' },
+        'azul':    { cor: '#1565c0', bg: '#e3f2fd', icone: '🎟️' }
+    };
 
-    showModal("Cupons Disponíveis Para Você", `
-        <p style="margin-bottom:15px;">Selecione um cupom para aplicar:</p>
+    const htmlLista = opcoesDisponiveis.map((opcao, index) => {
+        const style = estilos[opcao.estilo];
+        return `
+            <div class="cupom-item" data-index="${index}" 
+                 style="
+                    padding: 15px; 
+                    border: 1px solid ${style.cor}; 
+                    border-left: 6px solid ${style.cor};
+                    background-color: ${style.bg}; 
+                    margin-bottom: 12px; 
+                    cursor: pointer; 
+                    border-radius: 6px; 
+                    display: flex; 
+                    justify-content: space-between; 
+                    align-items: center;
+                    transition: transform 0.2s;
+                 "
+                 onmouseover="this.style.transform='translateX(5px)'"
+                 onmouseout="this.style.transform='translateX(0)'"
+            >
+                <div style="pointer-events: none;">
+                    <div style="font-weight:bold; color:${style.cor}; font-size: 0.9rem; text-transform: uppercase; margin-bottom: 4px;">
+                        ${style.icone} ${opcao.titulo}
+                    </div>
+                    <div style="font-size:1.1rem; color:#333; font-weight:bold;">${opcao.descricao}</div>
+                </div>
+                
+                <div style="pointer-events: none; text-align:right;">
+                    <span style="
+                        background:${style.cor}; 
+                        color:white; 
+                        padding:5px 10px; 
+                        border-radius:20px; 
+                        font-weight:bold; 
+                        font-size: 0.9rem;
+                    ">
+                        ${opcao.porcentagem}% OFF
+                    </span>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    showModal("Benefícios Disponíveis", `
+        <p style="margin-bottom:15px; color:#666;">Selecione um benefício para aplicar:</p>
         <div id="lista-cupons">${htmlLista}</div>
     `);
 
-    // (O resto do código de clique continua igual...)
+    // 4. EVENTO DE CLIQUE
     const containerCupons = document.getElementById('lista-cupons');
     if (containerCupons) {
         containerCupons.addEventListener('click', (e) => {
             const itemClicado = e.target.closest('.cupom-item');
             if (itemClicado) {
-                const id = parseInt(itemClicado.dataset.id);
-                // Busca na lista original (cache) para pegar os dados completos
-                const cupomSelecionado = cache.descontos.find(d => d.id_desconto === id);
+                const index = parseInt(itemClicado.dataset.index);
                 
-                if (cupomSelecionado) {
-                    state.activeDiscount = cupomSelecionado;
-                    alert(`Cupom "${cupomSelecionado.tipo}" aplicado!`);
+                // Recupera o objeto completo do array local
+                const descontoEscolhido = opcoesDisponiveis[index];
+                
+                if (descontoEscolhido) {
+                    // Atualiza o State Global
+                    state.activeDiscount = {
+                        tipo: descontoEscolhido.tipo,         // Vai para o banco (ENUM)
+                        descricao: descontoEscolhido.descricao,       // Para mostrar na tela
+                        porcentagem: descontoEscolhido.porcentagem // Valor matemático
+                    };
+                    
+                    alert(`"${descontoEscolhido.descricao}" aplicado com sucesso!`);
                     hideModal();
-                    renderApp();
+                    renderApp(); // Atualiza carrinho
                 }
             }
         });
@@ -356,7 +401,8 @@ function abrirModalCheckout(total) {
             // Envia dados do desconto se houver
             desconto: state.activeDiscount ? {
                 tipo: state.activeDiscount.tipo, // 'promocional', 'cupom', etc
-                valor: state.activeDiscount.porcentagem
+                valor: state.activeDiscount.porcentagem,
+                descricao: state.activeDiscount.descricao
             } : null
         };
 

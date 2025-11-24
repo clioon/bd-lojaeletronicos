@@ -10,7 +10,7 @@ CORS(app)
 
 # CONFIGURAÇÃO DO BANCO
 DB_CONFIG = {
-    'dbname': 'TESTE',
+    'dbname': 'loja_vendas',
     'user': 'postgres',
     'password': 'abc123',  # <--- COLOQUE SUA SENHA AQUI
     'host': 'localhost',
@@ -206,14 +206,14 @@ def checkout():
         """
         cursor.execute(sql_venda, (id_pedido, custo_envio, imposto_loja, taxa_pagamento, frete_cobrado, subtotal_calculado, valor_desconto, total_front))
 
-        # # =================================================================
-        # # 4. REGISTRAR DESCONTO (Se houver)
-        # # =================================================================
-        # if dados_desconto:
-        #     cursor.execute("""
-        #         INSERT INTO Desconto_Aplicado (id_pedido, tipo, porcentagem, descricao)
-        #         VALUES (%s, 'promocional', %s, %s)
-        #     """, (id_pedido, dados_desconto.get('valor', 0), dados_desconto.get('tipo', 'Cupom')))
+        # =================================================================
+        # 4. REGISTRAR DESCONTO (Se houver)
+        # =================================================================
+        if dados_desconto:
+            cursor.execute("""
+                INSERT INTO Desconto_Aplicado (id_pedido, tipo, porcentagem, descricao)
+                VALUES (%s, %s, %s, %s)
+            """, (id_pedido, dados_desconto.get('tipo', 'promocional'), dados_desconto.get('valor', 0), dados_desconto.get('descricao', 'desconto aplicado')))
 
         # =================================================================
         # 5. INSERIR PAGAMENTO
