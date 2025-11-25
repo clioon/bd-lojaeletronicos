@@ -12,7 +12,7 @@
     <style>
         /* Estilos específicos para o Dashboard de Relatórios */
         body {
-            background-color: #f4f6f8; /* Fundo levemente cinza */
+            background-color: #f4f6f8;
         }
 
         .admin-header {
@@ -40,7 +40,6 @@
             padding: 20px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
             border: 1px solid #eee;
-            /* Garante altura mínima para o gráfico renderizar bem */
             min-height: 350px; 
             display: flex;
             flex-direction: column;
@@ -84,7 +83,6 @@
             margin-left: 10px;
         }
 
-        /* Responsividade para celular */
         @media (max-width: 600px) {
             .dashboard-container { grid-template-columns: 1fr; }
         }
@@ -154,7 +152,6 @@
     <script>
         const API_URL = "http://localhost:5000";
 
-        // Configuração global de cores para manter consistência
         Chart.defaults.font.family = "'Segoe UI', 'Helvetica', 'Arial', sans-serif";
         Chart.defaults.color = '#666';
         
@@ -176,12 +173,11 @@
                 const data = await response.json();
                 const ctx = document.getElementById(elementId).getContext('2d');
 
-                // Lógica para montar os dados do Chart.js
                 const chartData = {
-                    labels: data[config.labelsKey], // Ex: data.categorias
+                    labels: data[config.labelsKey],
                     datasets: config.customDataset ? config.customDataset(data) : [{
                         label: config.label || 'Valor',
-                        data: data[config.dataKey],     // Ex: data.totais
+                        data: data[config.dataKey],
                         backgroundColor: config.color || COLORS[0],
                         borderColor: config.borderColor || COLORS[0].replace('0.7', '1'),
                         borderWidth: 1
@@ -193,7 +189,7 @@
                     data: chartData,
                     options: {
                         responsive: true,
-                        maintainAspectRatio: false, // Importante para caber no card
+                        maintainAspectRatio: false,
                         indexAxis: config.horizontal ? 'y' : 'x',
                         plugins: {
                             legend: { display: !!config.showLegend }
@@ -277,7 +273,7 @@
                     {
                         label: 'Mínimo Seguro',
                         data: data.minimo,
-                        backgroundColor: 'rgba(255, 99, 132, 0.5)' // Vermelho alerta
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)'
                     }
                 ]
             });
@@ -296,7 +292,7 @@
                 labelsKey: 'produtos',
                 dataKey: 'lucros',
                 label: 'Lucro (R$)',
-                color: COLORS[2] // Amarelo
+                color: COLORS[2]
             });
 
         });

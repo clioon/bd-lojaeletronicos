@@ -1,4 +1,3 @@
-// js/components/productList.js
 import { formatCurrency } from '../utils.js';
 import { showModal } from './modal.js';
 import { buscarRecomendacoes } from '../api.js';
@@ -173,7 +172,7 @@ export function renderProductList(container, produtos, onAddToCart) {
             const matchNome = p.nome.toLowerCase().includes(termo);
             
             // Filtro por tipo (se vazio, traz todos)
-            const tipoItem = p.tipo || ""; // Proteção se tipo for null
+            const tipoItem = p.tipo || "";
             const matchTipo = tipoSelecionado === "" || tipoItem === tipoSelecionado;
             
             return matchNome && matchTipo;

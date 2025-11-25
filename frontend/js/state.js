@@ -1,5 +1,4 @@
 // variaveis globais
-
 export const state = {
     role: "home", // "home" | "cliente" | "loja"
     page: "produtos", // Página atual
@@ -8,7 +7,6 @@ export const state = {
     activeDiscount: null
 };
 
-// Dados cacheados para não bater na API toda hora (opcional)
 export const cache = {
     produtos: [],
     clientes: [],
@@ -20,7 +18,6 @@ export const cache = {
     listaHighTicket: []
 };
 
-// Filtros globais
 export const filters = {
     produto: { nome: "", tipo: "" },
     cliente: { nome: "" }

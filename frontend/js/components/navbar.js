@@ -1,4 +1,3 @@
-// js/components/navbar.js
 import { state } from '../state.js';
 
 export function renderNavbar(container, onNavigate) {

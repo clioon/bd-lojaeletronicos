@@ -1,4 +1,3 @@
-// js/main.js
 import { buscarProdutos, buscarClientes, enviarPedido, buscarDescontos, buscarClientesFidelidade, buscarClientesPromocionais, buscarClientesPrimeiraCompra, buscarClientesInativos, buscarClientesHighTicket} from './api.js';
 import { state, cache } from './state.js';
 import { formatCurrency } from './utils.js';
@@ -20,8 +19,8 @@ const formatarProduto = (p) => ({
     categoria: p.categoria,
     // Proteção contra nulos e conversão de nomes
     preco: parseFloat(p.preco || 0), 
-    custo_unitario: parseFloat(p.custo || 0), // Mapeia 'custo' -> 'custo_unitario'
-    estoqueAtual: parseInt(p.estoque || 0),   // Mapeia 'estoque' -> 'estoqueAtual'
+    custo_unitario: parseFloat(p.custo || 0),
+    estoqueAtual: parseInt(p.estoque || 0),
     estoqueMinimo: parseInt(p.estoque_min || 5),
     
     tipo: p.tipo_produto || "Outro",
@@ -45,7 +44,6 @@ async function init() {
             buscarClientesHighTicket()
         ]);
         
-        // Formata os preços que vêm como string do Python (Decimal) para Float
         cache.produtos = prods.map(formatarProduto);
         cache.clientes = clis;
         cache.descontos = descs;
@@ -57,9 +55,9 @@ async function init() {
 
         console.log(`Carregado: ${vips.length} VIPs, ${promos.length} Promocionais, ${novatos.length} Primeira Compra, ${inativos.length} Inativos e ${highTickets.length} High Tickets.`);
         
-        // Simula login com o primeiro cliente do banco
+        // Login
         if (cache.clientes.length > 0) {
-            state.user = cache.clientes[0];
+            state.user = cache.clientes.find(c => c.id === 51) || cache.clientes[0];
         }
 
         renderApp();
@@ -76,12 +74,11 @@ function renderApp() {
     // ROTA 1: HOME (Seleção de Perfil)
     if (state.role === 'home') {
         renderHome(app, (targetPage) => {
-            // Callback de navegação
             if (targetPage === 'produtos') state.page = 'produtos';
             if (targetPage === 'admin') state.page = 'admin';
             renderApp();
         });
-        return; // Para aqui, não renderiza navbar na home
+        return;
     }
 
     // Se passou da home, renderiza Navbar
@@ -114,11 +111,9 @@ function renderApp() {
     // ROTA 4: ADMIN (NOVO)
     else if (state.page === 'admin') {
         if (state.role === 'loja') {
-            
-            // Função para recarregar tudo
             const carregarDashboard = () => {
                 Promise.all([
-                    buscarClientes(), // IMPORTANTE: Buscar clientes atualizados
+                    buscarClientes(),
                     buscarProdutos()
                 ]).then(([clientesAtualizados, produtosAtualizados]) => {
                     
@@ -152,10 +147,10 @@ function renderApp() {
 function adicionarAoCarrinho(produto) {
     state.cart.push(produto);
     alert(`${produto.nome} adicionado!`);
-    renderApp(); // Atualiza contador na navbar
+    renderApp();
 }
 
-// Lógica: Renderizar tela de Carrinho (Simples, direto no main por enquanto)
+// Lógica: Renderizar tela de Carrinho
 function renderCarrinho(container) {
     if (state.cart.length === 0) {
         container.innerHTML = `
@@ -177,7 +172,6 @@ function renderCarrinho(container) {
     // Se tiver desconto ativo, calcula o valor a subtrair
     let valorDesconto = 0;
     if (state.activeDiscount) {
-        // Ex: 10% de 100 = 10
         valorDesconto = subtotal * (state.activeDiscount.porcentagem / 100);
     }
     
@@ -272,7 +266,7 @@ function abrirModalDescontos() {
     // Opção A: Desconto de Primeira Compra
     if (ehPrimeiraCompra) {
         opcoesDisponiveis.push({
-            tipo: 'promocional', // Mapeando para o ENUM do banco (pode ser 'promocional' ou 'outros')
+            tipo: 'promocional',
             titulo: 'Primeira Compra',
             descricao: 'Boas-vindas! Ganhe desconto na sua estreia.',
             porcentagem: 10, // Hardcoded: 10%
@@ -283,7 +277,7 @@ function abrirModalDescontos() {
     // Opção B: Desconto Gamer (Promocional)
     if (ehPromocional) {
         opcoesDisponiveis.push({
-            tipo: 'promocional', // ENUM do banco
+            tipo: 'promocional',
             titulo: 'Desconto Gamer',
             descricao: 'Especial para quem compra periféricos.',
             porcentagem: 15, // Hardcoded: 15%
@@ -294,7 +288,7 @@ function abrirModalDescontos() {
     // Opção C: Desconto VIP (Fidelidade)
     if (ehFidelidade) {
         opcoesDisponiveis.push({
-            tipo: 'fidelidade', // ENUM do banco
+            tipo: 'fidelidade',
             titulo: 'Cliente VIP',
             descricao: 'Recompensa por sua fidelidade.',
             porcentagem: 20, // Hardcoded: 20%
@@ -308,8 +302,8 @@ function abrirModalDescontos() {
             tipo: 'cupom',
             titulo: 'Que bom te ver!',
             descricao: 'Estávamos com saudades. Aqui está um presente.',
-            porcentagem: 12, // Um valor quebrado para parecer calculado
-            estilo: 'verde_agua' // Novo estilo
+            porcentagem: 12,
+            estilo: 'verde_agua'
         });
     }
 
@@ -319,8 +313,8 @@ function abrirModalDescontos() {
             tipo: 'parceria',
             titulo: 'Membro Elite',
             descricao: 'Seu ticket médio é superior à média da loja.',
-            porcentagem: 25, // Desconto agressivo para quem gasta muito
-            estilo: 'dourado' // Novo estilo
+            porcentagem: 25, 
+            estilo: 'dourado'
         });
     }
 
@@ -331,7 +325,6 @@ function abrirModalDescontos() {
     }
 
     // 3. RENDERIZAÇÃO VISUAL
-    // Configuração de cores baseada no 'estilo' que definimos acima
     const estilos = {
         'roxo':    { cor: '#6a1b9a', bg: '#f3e5f5', icone: '👑' },
         'laranja': { cor: '#e65100', bg: '#fff3e0', icone: '🔥' },
@@ -341,7 +334,6 @@ function abrirModalDescontos() {
     };
 
     const htmlLista = opcoesDisponiveis.map((opcao, index) => {
-        // Fallback para 'azul' se o estilo não existir
         const style = estilos[opcao.estilo] || estilos['azul'];
         
         return `
@@ -404,14 +396,14 @@ function abrirModalDescontos() {
                 if (descontoEscolhido) {
                     // Atualiza o State Global
                     state.activeDiscount = {
-                        tipo: descontoEscolhido.tipo,         // Vai para o banco (ENUM)
-                        descricao: descontoEscolhido.descricao,       // Para mostrar na tela
-                        porcentagem: descontoEscolhido.porcentagem // Valor matemático
+                        tipo: descontoEscolhido.tipo,
+                        descricao: descontoEscolhido.descricao, 
+                        porcentagem: descontoEscolhido.porcentagem
                     };
                     
                     alert(`"${descontoEscolhido.descricao}" aplicado com sucesso!`);
                     hideModal();
-                    renderApp(); // Atualiza carrinho
+                    renderApp();
                 }
             }
         });
@@ -419,8 +411,6 @@ function abrirModalDescontos() {
 }
 
 // Lógica: Abrir Modal e Enviar Pedido
-// js/main.js
-
 function abrirModalCheckout(total) {
     // Pega nome do usuário ou define padrão
     const nomeCliente = state.user ? state.user.nome : 'Cliente Anônimo';
@@ -448,7 +438,7 @@ function abrirModalCheckout(total) {
         const btn = document.getElementById('btn-confirmar-pagamento');
         const metodo = document.getElementById('pagamento-select').value;
         
-        // Monta o payload (carga de dados) robusto
+        // Monta o payload (carga de dados)
         const pedido = {
             // Se não tiver user logado, usa ID 1 (ou trate isso no back)
             cliente_id: state.user ? state.user.id : 1, 
@@ -464,7 +454,7 @@ function abrirModalCheckout(total) {
             
             // Envia dados do desconto se houver
             desconto: state.activeDiscount ? {
-                tipo: state.activeDiscount.tipo, // 'promocional', 'cupom', etc
+                tipo: state.activeDiscount.tipo,
                 valor: state.activeDiscount.porcentagem,
                 descricao: state.activeDiscount.descricao
             } : null
@@ -474,12 +464,10 @@ function abrirModalCheckout(total) {
             btn.innerText = "Processando...";
             btn.disabled = true;
 
-            // Chama a API Python
             const res = await enviarPedido(pedido);
             
             alert("Sucesso! " + res.message);
             
-            // Limpa tudo
             state.cart = []; 
             state.activeDiscount = null;
             hideModal();
@@ -488,7 +476,7 @@ function abrirModalCheckout(total) {
             
         } catch (erro) {
             console.error(erro);
-            alert("Erro ao processar: " + erro.message); // message vem do throw no api.js
+            alert("Erro ao processar: " + erro.message);
             btn.innerText = "Confirmar Compra";
             btn.disabled = false;
         }

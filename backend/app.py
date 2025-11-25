@@ -71,8 +71,7 @@ def get_produtos():
     
     cursor.close()
     conn.close()
-    
-    # O retorno será uma lista de JSONs prontinha para o JS
+
     return jsonify(produtos)
 
 # =================================================================
@@ -123,10 +122,10 @@ def checkout():
         # 0. PREPARAÇÃO DOS DADOS
         # =================================================================
         id_cliente = dados.get('cliente_id')
-        items_recebidos = dados.get('items') # Lista de objetos {id_produto, preco}
+        items_recebidos = dados.get('items')
         total_front = dados.get('total')
-        metodo_pagamento = dados.get('metodo_pagamento') # ex: 'pix', 'cartao_credito'
-        dados_desconto = dados.get('desconto') # Pode ser None ou objeto
+        metodo_pagamento = dados.get('metodo_pagamento')
+        dados_desconto = dados.get('desconto')
         
         # Agrupa itens iguais para definir quantidade (Ex: 2x Mouse)
         # Cria um dicionario: { id_produto: {qtd: 2, preco: 100} }
@@ -144,7 +143,7 @@ def checkout():
         
         # Datas
         data_hoje = datetime.now().date()
-        prazo_entrega = datetime.now().date() # Em um sistema real, somaria dias
+        prazo_entrega = datetime.now().date()
 
         # =================================================================
         # 1. INSERIR PEDIDO
@@ -190,7 +189,7 @@ def checkout():
         # =================================================================
         # 3. INSERIR VENDA (Financeiro)
         # =================================================================
-        # Definindo valores fixos para simplificar (num sistema real seriam calculados)
+        # Definindo valores fixos para simplificar
         custo_envio = 20.00 
         imposto_loja = total_front * 0.10 # 10%
         taxa_pagamento = 5.00
@@ -198,7 +197,7 @@ def checkout():
         
         valor_desconto = 0
         if dados_desconto:
-            # Se for porcentagem, calcula. Aqui assumo que o front ja mandou o total com desconto
+            # Se for porcentagem, calcula. Aqui o front ja mandou o total com desconto
             # Então calculamos a diferença do subtotal
             valor_desconto = (subtotal_calculado + frete_cobrado) - total_front
 
@@ -220,9 +219,7 @@ def checkout():
         # =================================================================
         # 5. INSERIR PAGAMENTO
         # =================================================================
-        # Mapear string do front para ENUM do banco se necessário
-        # Assumindo que o front manda: 'pix', 'cartao_credito', etc iguais ao ENUM
-        
+
         sql_pagamento = """
             INSERT INTO Pagamento (id_pedido, forma_pagamento, parcelas, data_pagamento, valor_pago)
             VALUES (%s, %s, 1, %s, %s)
@@ -259,7 +256,7 @@ def checkout():
         }), 201
 
     except Exception as e:
-        # Se DEU ERRO em qualquer etapa acima, desfaz tudo!
+        # Se DEU ERRO em qualquer etapa acima, desfaz tudo
         conn.rollback()
         print(f"Erro na transação: {e}")
         return jsonify({"message": f"Erro ao processar compra: {str(e)}"}), 500
@@ -277,7 +274,6 @@ def get_descontos():
     if not conn: return jsonify([]), 500
 
     cursor = conn.cursor(cursor_factory=RealDictCursor)
-    # Busca apenas descontos que estão marcados como ativos
     cursor.execute("SELECT * FROM desconto_aplicado")
     descontos = cursor.fetchall()
 
@@ -313,7 +309,7 @@ def get_clientes_promocional():
     conn = get_db_connection()
     cursor = conn.cursor(cursor_factory=RealDictCursor)
     
-    # Query um pouco mais complexa: Conta quantos itens do tipo 'Periferico' cada um comprou
+    # Conta quantos itens do tipo 'Periferico' cada um comprou
     # e usa HAVING para filtrar só quem tem >= 2
     query = """
         SELECT c.id_cliente, c.nome_cliente

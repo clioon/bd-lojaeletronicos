@@ -1,4 +1,3 @@
-// js/components/adminDashboard.js
 import { formatCurrency } from '../utils.js';
 import { showModal, hideModal } from './modal.js';
 import { criarCliente, criarProduto } from '../api.js';
@@ -274,7 +273,6 @@ export function renderAdminDashboard(container, clientes, produtos, onReload) {
 
     // ABA 3: Vendas e Relatórios
     const renderTabVendas = () => {
-        // Aqui movemos aquele botão de Relatório que você tinha antes
         contentDiv.innerHTML = `
             <div style="text-align:center; padding: 40px; background: white; border-radius: 8px; border: 1px dashed #ccc;">
                 <h3>Gestão de Vendas</h3>
@@ -291,7 +289,7 @@ export function renderAdminDashboard(container, clientes, produtos, onReload) {
         `;
     };
 
-    // Lógica de Troca de Abas (Igual ao anterior)
+    // Lógica de Troca de Abas
     const tabs = container.querySelectorAll('.tab-btn');
     tabs.forEach(btn => {
         btn.addEventListener('click', () => {

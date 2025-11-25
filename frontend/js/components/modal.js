@@ -1,5 +1,3 @@
-// js/components/modal.js
-
 const modalOverlay = document.getElementById("modal-overlay");
 const modalTitle = document.getElementById("modal-title");
 const modalBody = document.getElementById("modal-body");
@@ -17,7 +15,7 @@ export function showModal(title, contentHTML) {
     modalTitle.innerText = title;
     modalBody.innerHTML = contentHTML;
     modalOverlay.classList.remove("hidden");
-    modalOverlay.classList.add("flex"); // Assume que você tem uma classe .flex no CSS ou usa display flex
+    modalOverlay.classList.add("flex");
 }
 
 export function hideModal() {

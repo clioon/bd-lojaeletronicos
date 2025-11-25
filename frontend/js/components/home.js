@@ -1,4 +1,3 @@
-// js/components/home.js
 import { state } from '../state.js';
 
 export function renderHome(container, onNavigate) {
