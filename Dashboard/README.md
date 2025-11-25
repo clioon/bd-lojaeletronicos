@@ -85,12 +85,15 @@ Com ele, é possível identificar oportunidades de melhoria, otimizar promoçõe
 ---
 
 ### 💾 Integração com o Banco
-O Power BI foi conectado ao PostgreSQL utilizando o driver **Npgsql** e a string:
+O Power BI foi conectado ao PostgreSQL utilizando as credenciais abaixo:
 ```
 Servidor: localhost:5432
-Banco de dados: teste
+Banco de dados: loja_teste
 Usuário: postgres
+Senha: **sua senha**
 ```
+![ConexaoBanco](../Materiais%20%Videos/output.gif)
+
 
 ---
 
