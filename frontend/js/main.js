@@ -14,6 +14,20 @@ import { setupModalListeners, showModal, hideModal } from './components/modal.js
 // Elemento raiz
 const app = document.getElementById('app');
 
+const formatarProduto = (p) => ({
+    id: p.id,
+    nome: p.nome,
+    categoria: p.categoria,
+    // Proteção contra nulos e conversão de nomes
+    preco: parseFloat(p.preco || 0), 
+    custo_unitario: parseFloat(p.custo || 0), // Mapeia 'custo' -> 'custo_unitario'
+    estoqueAtual: parseInt(p.estoque || 0),   // Mapeia 'estoque' -> 'estoqueAtual'
+    estoqueMinimo: parseInt(p.estoque_min || 5),
+    
+    tipo: p.tipo_produto || "Outro",
+    descricao: p.descricao || ''
+});
+
 async function init() {
     console.log("Inicializando sistema...");
     setupModalListeners(); // Ativa fechar modal
@@ -32,13 +46,7 @@ async function init() {
         ]);
         
         // Formata os preços que vêm como string do Python (Decimal) para Float
-        cache.produtos = prods.map(p => ({
-            ...p,
-            preco: parseFloat(p.preco),
-            tipo: p.tipo_produto || "Outro",
-            estoqueAtual: p.estoque
-        }));
-        
+        cache.produtos = prods.map(formatarProduto);
         cache.clientes = clis;
         cache.descontos = descs;
         cache.listaFidelidade = vips;
@@ -116,8 +124,7 @@ function renderApp() {
                     
                     // Atualiza cache
                     cache.clientes = clientesAtualizados;
-                    cache.produtos = produtosAtualizados;
-
+                    cache.produtos = produtosAtualizados.map(formatarProduto);
                     renderAdminDashboard(
                         mainContainer, 
                         cache.clientes, 

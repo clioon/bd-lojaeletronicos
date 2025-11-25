@@ -1,7 +1,7 @@
 // js/components/adminDashboard.js
 import { formatCurrency } from '../utils.js';
 import { showModal, hideModal } from './modal.js';
-import { criarCliente } from '../api.js';
+import { criarCliente, criarProduto } from '../api.js';
 
 console.log("ADMIN DASHBOARD FOI RENDERIZADO");
 
@@ -63,7 +63,7 @@ export function renderAdminDashboard(container, clientes, produtos, onReload) {
                                 <td>#${c.id}</td>
                                 <td><strong>${c.nome}</strong></td>
                                 <td>${c.local}</td>
-                                <td>${c.totalPedidos || 0}</td>
+                                <td>${c.total_pedidos || 0}</td>
                                 <td><span style="background:#e3f2fd; color:#1565c0; padding:2px 8px; border-radius:10px; font-size:0.85rem;">${c.pontos || 0} pts</span></td>
                             </tr>
                         `).join('')}
@@ -136,7 +136,9 @@ export function renderAdminDashboard(container, clientes, produtos, onReload) {
         contentDiv.innerHTML = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
                 <h3 style="margin: 0; margin-right: 10px;">Estoque de Produtos</h3>
-                <button class="btn-add" style="padding:8px 15px; font-size:0.9rem;">+ Novo Produto</button>
+                <button id="btn-add-produto" class="btn-add" style="padding:8px 15px; font-size:0.9rem; background:#27ae60; color:white; border:none; border-radius:4px; cursor:pointer;">
+                    + Novo Produto
+                </button>
             </div>
             <div class="table-container">
                 <table class="data-table">
@@ -145,32 +147,32 @@ export function renderAdminDashboard(container, clientes, produtos, onReload) {
                             <th>ID</th>
                             <th>Produto</th>
                             <th>Preço</th>
+                            <th>Custo</th>
                             <th>Estoque</th>
                             <th>Status</th>
-                            <th>Ações</th>
                         </tr>
                     </thead>
                     <tbody>
                         ${produtos.map(p => {
-                            // Lógica visual de estoque
                             let stockClass = 'stock-ok';
-                            let stockLabel = 'Disponível';
+                            let stockLabel = 'OK';
                             if (p.estoqueAtual === 0) { stockClass = 'stock-crit'; stockLabel = 'Esgotado'; }
-                            else if (p.estoqueAtual < 5) { stockClass = 'stock-low'; stockLabel = 'Baixo'; }
+                            else if (p.estoqueAtual <= p.estoqueMinimo) { stockClass = 'stock-low'; stockLabel = 'Baixo'; }
 
                             return `
                                 <tr>
                                     <td>#${p.id}</td>
                                     <td>
                                         <div style="font-weight:bold;">${p.nome}</div>
-                                        <div style="font-size:0.8rem; color:#888;">${p.tipo}</div>
+                                        <div style="font-size:0.8rem; color:#888;">${p.categoria}</div>
                                     </td>
                                     <td>${formatCurrency(p.preco)}</td>
-                                    <td><strong>${p.estoqueAtual}</strong></td>
-                                    <td class="${stockClass}">${stockLabel}</td>
+                                    <td style="color:#666; font-size:0.9rem;">${p.custo_unitario ? formatCurrency(p.custo_unitario) : '-'}</td>
                                     <td>
-                                        <button style="border:1px solid #ccc; background:white; cursor:pointer; padding:2px 5px;">✏️</button>
+                                        <strong>${p.estoqueAtual}</strong> 
+                                        <span style="font-size:0.8rem; color:#999;">(Min: ${p.estoqueMinimo || 5})</span>
                                     </td>
+                                    <td class="${stockClass}">${stockLabel}</td>
                                 </tr>
                             `;
                         }).join('')}
@@ -178,6 +180,96 @@ export function renderAdminDashboard(container, clientes, produtos, onReload) {
                 </table>
             </div>
         `;
+
+        // --- LÓGICA DO BOTÃO ADICIONAR PRODUTO ---
+        document.getElementById('btn-add-produto').addEventListener('click', () => {
+            const formHtml = `
+                <div style="display:grid; gap:15px;">
+                    
+                    <div>
+                        <label style="display:block; font-weight:bold; margin-bottom:5px;">Nome do Produto</label>
+                        <input type="text" id="p-nome" placeholder="Ex: Headset Wireless" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                    </div>
+                    
+                    <div>
+                        <label style="display:block; font-weight:bold; margin-bottom:5px;">Categoria</label>
+                        <select id="p-categoria" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                            <option value="Periférico">Periférico</option>
+                            <option value="Hardware">Hardware</option>
+                            <option value="Dispositivo">Dispositivo</option>
+                            <option value="Outro">Outro</option>
+                        </select>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <div>
+                            <label style="display:block; font-weight:bold; margin-bottom:5px;">Preço de Venda (R$)</label>
+                            <input type="number" id="p-preco" placeholder="0.00" step="0.01" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:bold; margin-bottom:5px;">Custo Unitário (R$)</label>
+                            <input type="number" id="p-custo" placeholder="0.00" step="0.01" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                        <div>
+                            <label style="display:block; font-weight:bold; margin-bottom:5px;">Estoque Inicial</label>
+                            <input type="number" id="p-estoque" value="10" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        </div>
+                        <div>
+                            <label style="display:block; font-weight:bold; margin-bottom:5px;">Estoque Mínimo</label>
+                            <input type="number" id="p-minimo" value="5" style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+                        </div>
+                    </div>
+
+                    <button id="btn-salvar-produto" style="background:#27ae60; color:white; padding:12px; border:none; border-radius:4px; cursor:pointer; font-weight:bold; margin-top:10px;">
+                        Salvar Produto
+                    </button>
+                </div>
+            `;
+
+            showModal("Cadastrar Novo Produto", formHtml);
+
+            // Ação de Salvar
+            document.getElementById('btn-salvar-produto').onclick = async () => {
+                const btn = document.getElementById('btn-salvar-produto');
+                
+                // Captura valores
+                const produto = {
+                    nome: document.getElementById('p-nome').value,
+                    categoria: document.getElementById('p-categoria').value,
+                    preco: parseFloat(document.getElementById('p-preco').value),
+                    custo: parseFloat(document.getElementById('p-custo').value),
+                    estoque_atual: parseInt(document.getElementById('p-estoque').value),
+                    estoque_minimo: parseInt(document.getElementById('p-minimo').value)
+                };
+
+                // Validação simples
+                if(!produto.nome || isNaN(produto.preco)) {
+                    alert("Preencha o nome e o preço corretamente.");
+                    return;
+                }
+
+                try {
+                    btn.innerText = "Salvando...";
+                    btn.disabled = true;
+
+                    await criarProduto(produto);
+                    
+                    alert("Produto cadastrado!");
+                    hideModal();
+                    
+                    // Atualiza a tela (recarrega dados do servidor)
+                    if(onReload) onReload(); 
+                    
+                } catch (e) {
+                    alert("Erro ao salvar: " + e);
+                    btn.innerText = "Salvar Produto";
+                    btn.disabled = false;
+                }
+            };
+        });
     };
 
     // ABA 3: Vendas e Relatórios

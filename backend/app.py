@@ -44,7 +44,9 @@ def get_produtos():
             p.id_produto as id,
             p.nome_produto as nome,
             p.preco_unitario as preco,
+            p.custo_unitario as custo,
             p.estoque_atual as estoque,
+            p.estoque_minimo as estoque_min,
             p.categoria,
             -- Tenta pegar caracteristicas específicas de cada tabela filha
             d.cor as cor_dispositivo,
@@ -951,7 +953,7 @@ def recorrencia_mensal():
     return jsonify(resposta)
 
 # =================================================================
-# ROTA: Média Mensal de Dias Entre Compras
+# ROTA: inserir cliente
 # =================================================================
 
 @app.route('/api/clientes', methods=['POST'])
@@ -995,6 +997,77 @@ def criar_cliente():
         conn.close()
 
 
+# =================================================================
+# ROTA: inserir produto
+# =================================================================
+
+@app.route('/api/produtos', methods=['POST'])
+def criar_produto():
+    dados = request.json
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        # 1. Inserir na Tabela PAI (Produto)
+        cat = dados.get('categoria') # Ex: 'Hardware'
+        
+        query_pai = """
+            INSERT INTO Produto 
+            (nome_produto, categoria, preco_unitario, custo_unitario, estoque_atual, estoque_minimo)
+            VALUES (%s, %s, %s, %s, %s, %s)
+            RETURNING id_produto;
+        """
+        
+        cursor.execute(query_pai, (
+            dados.get('nome'),
+            cat,
+            dados.get('preco'),
+            dados.get('custo'),
+            dados.get('estoque_atual'),
+            dados.get('estoque_minimo')
+        ))
+        
+        novo_id = cursor.fetchone()[0]
+
+        # 2. Inserir na Tabela FILHA correspondente
+        # Precisamos preencher os campos NOT NULL com valores padrão ('Generico', 0, etc)
+        # para que o JOIN funcione na leitura.
+
+        if cat == 'Hardware':
+            # Campos obrigatórios: consumo_energia, tipo
+            cursor.execute("""
+                INSERT INTO Hardware (id_produto, consumo_energia, especificacao_tecnica, tipo)
+                VALUES (%s, 0, 'Especificação Padrão', 'Componente')
+            """, (novo_id,))
+            
+        elif cat == 'Periférico' or cat == 'Periferico':
+            # Campos obrigatórios: cor, conexao, tipo
+            cursor.execute("""
+                INSERT INTO Periferico (id_produto, cor, conexao, tipo)
+                VALUES (%s, 'Preto', 'USB', 'Acessório')
+            """, (novo_id,))
+            
+        elif cat == 'Dispositivo':
+            # Campos obrigatórios: cor, dimensao, tipo
+            cursor.execute("""
+                INSERT INTO Dispositivo (id_produto, cor, dimensao, tipo)
+                VALUES (%s, 'Padrão', 'Padrão', 'Eletrônico')
+            """, (novo_id,))
+
+        # Se for 'Outro', não inserimos em nenhuma filha, e o sistema lerá como 'Outro' mesmo.
+
+        conn.commit()
+        print(f"Produto {novo_id} criado como {cat}")
+        
+        return jsonify({"message": "Produto criado!", "id": novo_id}), 201
+
+    except Exception as e:
+        conn.rollback()
+        print("Erro ao criar produto:", e)
+        return jsonify({"message": f"Erro SQL: {str(e)}"}), 500
+    finally:
+        cursor.close()
+        conn.close()
 
 
 if __name__ == '__main__':

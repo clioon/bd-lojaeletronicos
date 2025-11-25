@@ -103,3 +103,16 @@ export async function criarCliente(dadosCliente) {
         throw error;
     }
 }
+
+export async function criarProduto(dadosProduto) {
+    try {
+        const response = await fetch(`${API_URL}/produtos`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dadosProduto)
+        });
+        return await response.json();
+    } catch (error) {
+        throw error;
+    }
+}
