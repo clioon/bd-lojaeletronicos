@@ -92,7 +92,7 @@ Banco de dados: loja_teste
 Usuário: postgres
 Senha: **sua senha**
 ```
-![ConexaoBanco](../Materiais%20%Videos/output.gif)
+![ConexaoBanco](../Materiais%20Videos/output.gif)
 
 
 ---
