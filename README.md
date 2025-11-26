@@ -68,19 +68,22 @@ O frontend exibe o status do produto como 'OK', 'Baixo' ou 'Esgotado'.¹ Armazen
 
 A arquitetura correta utiliza um Campo Computado (Virtual Generated Column) ou cálculo na query:
 
+
 ```sql
-CASE
+    CASE
     WHEN estoque_atual = 0 THEN 'Esgotado'
     WHEN estoque_atual <= estoque_minimo THEN 'Baixo'
     ELSE 'OK'
-END´´´
+END
+```
 
 ```sql
 CASE
     WHEN estoque_atual = 0 THEN 'Esgotado'
     WHEN estoque_atual <= estoque_minimo THEN 'Baixo'
     ELSE 'OK'
-END```
+END
+```
 
 Isso garante que a regra de negócio visualizada no dashboard seja sempre um reflexo matemático puro do estado atual do inventário.
 
@@ -115,7 +118,8 @@ FROM
 WHERE
     p.ativo = 1 -- Assumindo Soft Delete para produtos removidos
 ORDER BY
-    p.nome ASC;```
+    p.nome ASC;
+```
 
 **Análise de Impacto:** O cálculo de `valor_patrimonial_venda` permite que o frontend some essa coluna para exibir o card "Valor em Estoque" no dashboard. Realizar essa multiplicação no banco de dados é geralmente mais eficiente do que trafegar dados brutos e iterar no JavaScript, especialmente para catálogos grandes.
 
@@ -129,7 +133,8 @@ INSERT INTO tb_produtos
 (nome, categoria, preco_venda, custo_unitario, estoque_atual, estoque_minimo,
 data_criacao)
 VALUES
-(?, ?, ?, ?, ?, ?, NOW());```
+(?, ?, ?, ?, ?, ?, NOW());
+```
 
 **Observação de Segurança:** É vital que o backend valide se `preco_venda` e `custo_unitario` são positivos antes da inserção para manter a integridade contábil.
 
@@ -158,7 +163,8 @@ GROUP BY
 HAVING
     LTV > 5000 -- Limiar definido pela regra de negócio "High Ticket"
 ORDER BY
-    LTV DESC;```
+    LTV DESC;
+```
 
 **Contexto:** Este endpoint alimenta listas de VIPs para ações promocionais exclusivas. [cite_start]A performance depende de indices na chave estrangeira `id_cliente` na tabela de pedidos. [cite: 107-108]
 
@@ -179,7 +185,8 @@ WHERE
     c.ultimo_pedido IS NOT NULL
     AND c.ultimo_pedido < DATE_SUB(NOW(), INTERVAL 6 MONTH) -- Definição de Inatividade (6 meses)
 ORDER BY
-    c.ultimo_pedido ASC; -- Prioriza os inativos há mais tempo [cite: 113-126]```
+    c.ultimo_pedido ASC; -- Prioriza os inativos há mais tempo [cite: 113-126]
+```
 
 **Insight:** Esta consulta é vital para campanhas de "Win-back" (reconquista). A dependência do campo `ultimo_pedido` (atualizado na transação de venda) evita uma subquery custosa do tipo `MAX(data_pedido)` na tabela de vendas.
 
@@ -198,7 +205,8 @@ FROM
 WHERE
     pontos_fidelidade >= 1000 -- Limiar para status "Gold/Fidelidade"
 ORDER BY
-    pontos_fidelidade DESC;```
+    pontos_fidelidade DESC;
+```
 
 #### 3.2.4. Detecção de Oportunidades de Primeira Compra (GET /clientes/primeira-compra)
 **Definição:** Usuários cadastrados que ainda não converteram em vendas (Lead Activation).
@@ -218,7 +226,8 @@ WHERE
     p.id_pedido IS NULL -- A ausência de correspondência indica zero compras
     AND c.data_cadastro >= DATE_SUB(NOW(), INTERVAL 30 DAY) -- Filtro de recência opcional
 ORDER BY
-    c.data_cadastro DESC;```
+    c.data_cadastro DESC;
+```
 
 **Relevância:** Identificar estes usuários permite o envio de cupons de boas-vindas, aumentando a taxa de conversão do funil.
 
@@ -239,7 +248,8 @@ A implementação deve usar Transações de Banco de Dados com bloqueio pessimis
 2.  **Verificação e Bloqueio (Locking):**
     Selecionar o produto e bloquear a linha para escrita até o fim da transação.
     ```sql
-    SELECT estoque_atual FROM tb_produtos WHERE id_produto = ? FOR UPDATE;```
+    SELECT estoque_atual FROM tb_produtos WHERE id_produto = ? FOR UPDATE;
+    ```
 
     **Lógica de Aplicação:** Se `estoque_atual < quantidade_solicitada`, lançar exceção e executar `ROLLBACK`.
 
@@ -247,14 +257,16 @@ A implementação deve usar Transações de Banco de Dados com bloqueio pessimis
     ```sql
     UPDATE tb_produtos
     SET estoque_atual = estoque_atual - ?
-    WHERE id_produto = ?;```
+    WHERE id_produto = ?;
+    ```
    
 
 4.  **Registro do Pedido:**
     Inserir o cabeçalho do pedido.
     ```sql
     INSERT INTO tb_pedidos (id_cliente, data_pedido, valor_total, status)
-    VALUES (?, NOW(), ?, 'PENDENTE');```
+    VALUES (?, NOW(), ?, 'PENDENTE');
+    ```
     Recuperar ID: `SET @id_pedido = LAST_INSERT_ID();`
 
 5.  **Registro dos Itens:**
@@ -262,7 +274,8 @@ A implementação deve usar Transações de Banco de Dados com bloqueio pessimis
     ```sql
     INSERT INTO tb_itens_pedido (id_pedido, id_produto, quantidade,
     preco_unitario_congelado)
-    VALUES (@id_pedido, ?, ?, ?);```
+    VALUES (@id_pedido, ?, ?, ?);
+    ```
    
 
 6.  **Atualização de Métricas do Cliente (Trigger ou Inline):**
@@ -272,7 +285,8 @@ A implementação deve usar Transações de Banco de Dados com bloqueio pessimis
     SET total_pedidos = total_pedidos + 1,
         ultimo_pedido = NOW(),
         pontos_fidelidade = pontos_fidelidade + ? -- Ex: 1 ponto por real gasto
-    WHERE id_cliente = ?;```
+    WHERE id_cliente = ?;
+    ```
    
 
 7.  **Finalização:**
@@ -304,7 +318,8 @@ GROUP BY
     p_recom.id_produto
 ORDER BY
     forca_relacao DESC
-LIMIT 4;``` 
+LIMIT 4;
+``` 
 
 Esta consulta analisa o histórico de pedidos passados para encontrar correlações de compra, aumentando o ticket médio automaticamente.
 
@@ -338,5 +353,3 @@ A arquitetura de dados proposta para o Sistema Kabom! demonstra uma dualidade fu
 A implementação correta das consultas SQL detalhadas neste relatório, especialmente as transações com bloqueio de estoque e as agregações analíticas de clientes, é fundamental para garantir que a promessa da interface ("Sou Cliente" vs "Sou Admin") seja cumprida com integridade, segurança e performance.
 Este documento deve guiar todas as futuras implementações de backend na plataforma.
 
-## Referências citadas
-1. `adminDashboard.js`
