@@ -69,12 +69,11 @@ O frontend exibe o status do produto como 'OK', 'Baixo' ou 'Esgotado'.¹ Armazen
 A arquitetura correta utiliza um Campo Computado (Virtual Generated Column) ou cálculo na query:
 
 ```sql
--- Exemplo de lógica de determinação de status
 CASE
     WHEN estoque_atual = 0 THEN 'Esgotado'
     WHEN estoque_atual <= estoque_minimo THEN 'Baixo'
     ELSE 'OK'
-END```
+END´´´
 
 ```sql
 CASE
