@@ -133,7 +133,7 @@
         </div>
 
         <div class="chart-card">
-            <h3>🚨 Alerta de Estoque Baixo</h3>
+            <h3>Alerta de Estoque Baixo</h3>
             <div class="canvas-container"><canvas id="chart9"></canvas></div>
         </div>
 
@@ -145,6 +145,16 @@
         <div class="chart-card">
             <h3>Top Produtos por Lucro</h3>
             <div class="canvas-container"><canvas id="chart12"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Intervalo médio de compras</h3>
+            <div class="canvas-container"><canvas id="chart14"></canvas></div>
+        </div>
+
+        <div class="chart-card">
+            <h3>Ciclo de Compra Médio (Mensal)</h3>
+            <div class="canvas-container"><canvas id="chart15"></canvas></div>
         </div>
 
     </div>
@@ -293,6 +303,25 @@
                 dataKey: 'lucros',
                 label: 'Lucro (R$)',
                 color: COLORS[2]
+            });
+
+            // 14. Recorrência Clientes (Ranking)
+            createChart('chart14', 'recorrencia-clientes', {
+                horizontal: true, // Barra deitada fica melhor pra nomes
+                labelsKey: 'clientes',
+                dataKey: 'dias',
+                label: 'Dias entre compras (Média)',
+                color: 'rgba(75, 192, 192, 0.7)' // Verde água
+            });
+
+            // 15. Recorrência Mensal (Linha)
+            createChart('chart15', 'recorrencia-mensal', {
+                type: 'line',
+                labelsKey: 'meses',
+                dataKey: 'dias',
+                label: 'Média de dias para recompra',
+                borderColor: 'rgba(255, 159, 64, 1)', // Laranja
+                color: 'rgba(255, 159, 64, 0.1)'
             });
 
         });
