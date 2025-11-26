@@ -74,7 +74,7 @@ CASE
     WHEN estoque_atual = 0 THEN 'Esgotado'
     WHEN estoque_atual <= estoque_minimo THEN 'Baixo'
     ELSE 'OK'
-END
+END```
 
 ```sql
 CASE
