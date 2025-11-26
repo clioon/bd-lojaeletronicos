@@ -76,6 +76,13 @@ CASE
     ELSE 'OK'
 END
 
+```sql
+CASE
+    WHEN estoque_atual = 0 THEN 'Esgotado'
+    WHEN estoque_atual <= estoque_minimo THEN 'Baixo'
+    ELSE 'OK'
+END```
+
 Isso garante que a regra de negócio visualizada no dashboard seja sempre um reflexo matemático puro do estado atual do inventário.
 
 ## 3. Engenharia de Consultas e Implementação de Backend
