@@ -1,5 +1,38 @@
 # Documentação Técnica e Arquitetura de Dados: Ecossistema de E-commerce Kabom!
 
+## Como Rodar o Código (Setup e Execução)
+
+Para iniciar o ecossistema Kabom!, a ordem de execução deve ser: **configurar o ambiente Python e iniciar o Backend (API)**, para então **acessar o Frontend** no seu navegador.
+
+---
+
+### 1. Inicialização e Configuração do Backend (Python/PostgreSQL)
+
+O backend é responsável pela lógica de negócios e pela comunicação com o banco de dados PostgreSQL.
+
+| Passo | Comando | Descrição |
+| :--- | :--- | :--- |
+| **1.1. Configuração do DB** | N/A | No arquivo **`app.py`** (localizado no diretório `backend`), localize o dicionário **`DB_CONFIG`**. Edite as variáveis (`HOST`, `DATABASE`, `USER`, `PASSWORD`) para corresponderem às suas próprias **configurações de conexão do PostgreSQL** e garantir que o backend possa acessar o esquema. |
+| **1.2. Acessar a Raiz** | `cd <diretorio_raiz_do_projeto>` | Navegue até o diretório raiz do projeto (onde se encontra o arquivo `requirements.txt`). |
+| **1.3. Instalar Dependências** | `pip install -r .\requirements.txt` | Baixa e instala todas as bibliotecas Python necessárias para que o backend (`app.py`) possa ser executado corretamente. |
+| **1.4. Iniciar Servidor** | `python .\backend\app.py` | Executa o script principal do backend, iniciando o servidor da API. A saída no console deverá indicar a porta em que o servidor está escutando. |
+
+---
+
+### 2. Inicialização do Frontend (Interface do Usuário)
+
+O frontend é uma aplicação HTML estática que consome a API do backend através de JavaScript.
+
+| Passo | Comando | Descrição |
+| :--- | :--- | :--- |
+<br>
+<br>
+
+---
+  
+
+## Explicação da aplicação
+
 ## 1. Introdução e Visão Geral da Arquitetura
 
 O presente relatório técnico constitui a documentação definitiva da arquitetura de backend e da camada de persistência de dados do Sistema Kabom!. Este documento foi elaborado para servir como referência central para engenheiros de software, arquitetos de dados e desenvolvedores backend responsáveis pela manutenção, evolução e otimização da lógica de negócios e das estratégias de consulta a banco de dados da plataforma.
@@ -352,32 +385,6 @@ A arquitetura de dados proposta para o Sistema Kabom! demonstra uma dualidade fu
 
 A implementação correta das consultas SQL detalhadas neste relatório, especialmente as transações com bloqueio de estoque e as agregações analíticas de clientes, é fundamental para garantir que a promessa da interface ("Sou Cliente" vs "Sou Admin") seja cumprida com integridade, segurança e performance.
 Este documento deve guiar todas as futuras implementações de backend na plataforma.
-
-## Como Rodar o Código (Setup e Execução)
-
-Para iniciar o ecossistema Kabom!, a ordem de execução deve ser: **configurar o ambiente Python e iniciar o Backend (API)**, para então **acessar o Frontend** no seu navegador.
-
----
-
-### 1. Inicialização e Configuração do Backend (Python/PostgreSQL)
-
-O backend é responsável pela lógica de negócios e pela comunicação com o banco de dados PostgreSQL.
-
-| Passo | Comando | Descrição |
-| :--- | :--- | :--- |
-| **1.1. Configuração do DB** | N/A | No arquivo **`app.py`** (localizado no diretório `backend`), localize o dicionário **`DB_CONFIG`**. Edite as variáveis (`HOST`, `DATABASE`, `USER`, `PASSWORD`) para corresponderem às suas próprias **configurações de conexão do PostgreSQL** e garantir que o backend possa acessar o esquema. |
-| **1.2. Acessar a Raiz** | `cd <diretorio_raiz_do_projeto>` | Navegue até o diretório raiz do projeto (onde se encontra o arquivo `requirements.txt`). |
-| **1.3. Instalar Dependências** | `pip install -r .\requirements.txt` | Baixa e instala todas as bibliotecas Python necessárias para que o backend (`app.py`) possa ser executado corretamente. |
-| **1.4. Iniciar Servidor** | `python .\backend\app.py` | Executa o script principal do backend, iniciando o servidor da API. A saída no console deverá indicar a porta em que o servidor está escutando. |
-
----
-
-### 2. Inicialização do Frontend (Interface do Usuário)
-
-O frontend é uma aplicação HTML estática que consome a API do backend através de JavaScript.
-
-| Passo | Comando | Descrição |
-| :--- | :--- | :--- |
 | **2.1. Acessar no Navegador** | N/A | **Abra o arquivo `home.html`** diretamente no seu navegador. Isso pode ser feito clicando duas vezes no arquivo ou usando uma extensão de servidor web simples (como o Live Server do VS Code). |
 | **2.2. URL de Acesso** | `https://127.0.0.1:5500/frontend/home.html` | Esta é a URL que você deve acessar. **Atenção:** o número **`5500`** neste endereço é apenas um **exemplo de porta** que pode ser utilizada por um servidor local do navegador. Verifique a porta exata que seu servidor web ou navegador está usando para abrir o `home.html`. |
 
